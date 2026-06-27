@@ -1,154 +1,121 @@
 "use client";
 
-import { Heart, MapPin, BedDouble, Bath, ArrowUpRight } from "lucide-react";
-
-const properties = [
-  {
-    id: 1,
-    title: "Luxury Apartment",
-    location: "Dhaka",
-    price: "$450/month",
-    beds: 3,
-    baths: 2,
-    image:
-      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85",
-  },
-  {
-    id: 2,
-    title: "Modern Villa",
-    location: "Uttara",
-    price: "$850/month",
-    beds: 5,
-    baths: 4,
-    image:
-      "https://images.unsplash.com/photo-1494526585095-c41746248156",
-  },
-  {
-    id: 3,
-    title: "Family House",
-    location: "Savar",
-    price: "$350/month",
-    beds: 2,
-    baths: 2,
-    image:
-      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750",
-  },
-  {
-    id: 4,
-    title: "Premium Condo",
-    location: "Gulshan",
-    price: "$950/month",
-    beds: 4,
-    baths: 3,
-    image:
-      "https://images.unsplash.com/photo-1568605114967-8130f3a36994",
-  },
-  {
-    id: 5,
-    title: "City Apartment",
-    location: "Mirpur",
-    price: "$400/month",
-    beds: 3,
-    baths: 2,
-    image:
-      "https://images.unsplash.com/photo-1570129477492-45c003edd2be",
-  },
-  {
-    id: 6,
-    title: "Luxury Penthouse",
-    location: "Banani",
-    price: "$1200/month",
-    beds: 6,
-    baths: 5,
-    image:
-      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c",
-  },
-];
+import { Heart, MapPin, BedDouble, Bath, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { getAllProperties } from "@/services/propertyApi";
+import toast from "react-hot-toast";
 
 export default function FeaturedProperties() {
+  const [properties, setProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProperties = async () => {
+      try {
+        const data = await getAllProperties(1, 6); // page 1, limit 6
+        if (data?.properties) {
+          setProperties(data.properties);
+        } else {
+          setProperties([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch properties:", error);
+        toast.error("Failed to load featured properties");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProperties();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="py-24 bg-white dark:bg-zinc-950">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <span className="loading loading-spinner loading-lg text-teal-500"></span>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className="py-24">
-      <div className="max-w-7xl mx-auto px-5">
-        {/* Header */}
-        <div className="text-center">
-          <p className="text-teal-500 font-semibold uppercase tracking-wider">
-            Featured Properties
-          </p>
-
-          <h2 className="text-4xl md:text-5xl font-bold mt-3">
-            Explore Premium Rentals
-          </h2>
-
-          <p className="mt-4 text-slate-500 max-w-2xl mx-auto">
-            Handpicked properties from trusted owners with secure booking.
+    <section className="py-24 bg-white dark:bg-zinc-950">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="text-center mb-16">
+          <p className="text-teal-600 font-semibold tracking-widest uppercase">Featured Listings</p>
+          <h2 className="text-5xl font-bold mt-3">Premium Properties</h2>
+          <p className="text-slate-600 dark:text-slate-400 mt-4 max-w-2xl mx-auto">
+            Handpicked luxury homes and apartments from trusted owners
           </p>
         </div>
 
-        {/* Cards */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-16">
-          {properties.map((property) => (
-            <div
-              key={property.id}
-              className="group rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-2xl transition-all duration-300"
-            >
-              {/* Image */}
-              <div className="relative overflow-hidden">
-                <img
-                  src={property.image}
-                  alt={property.title}
-                  className="h-64 w-full object-cover group-hover:scale-110 transition duration-500"
-                />
-
-                <button className="absolute top-4 right-4 bg-white/90 dark:bg-slate-900/90 p-3 rounded-full">
-                  <Heart size={18} />
-                </button>
-
-                <span className="absolute bottom-4 left-4 bg-teal-500 text-white px-3 py-1 rounded-full text-sm">
-                  Featured
-                </span>
-              </div>
-
-              {/* Content */}
-              <div className="p-6">
-                <div className="flex items-center gap-2 text-slate-500">
-                  <MapPin size={16} />
-                  {property.location}
-                </div>
-
-                <h3 className="mt-3 text-xl font-bold">
-                  {property.title}
-                </h3>
-
-                <p className="mt-2 text-2xl font-bold text-teal-500">
-                  {property.price}
-                </p>
-
-                <div className="flex gap-6 mt-5 text-slate-500">
-                  <div className="flex items-center gap-2">
-                    <BedDouble size={18} />
-                    {property.beds} Beds
+        {properties.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-slate-500">No properties available at the moment.</p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {properties.slice(0, 6).map((property) => (
+              <div 
+                key={property._id} 
+                className="group bg-white dark:bg-zinc-900 rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500"
+              >
+                <div className="relative h-80 overflow-hidden">
+                  <img 
+                    src={property.image || "https://via.placeholder.com/600x400"} 
+                    alt={property.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                  />
+                  <div className="absolute top-4 right-4">
+                    <button className="bg-white/90 dark:bg-zinc-900/90 p-3 rounded-full hover:bg-white transition">
+                      <Heart size={20} className="text-red-500" />
+                    </button>
                   </div>
-
-                  <div className="flex items-center gap-2">
-                    <Bath size={18} />
-                    {property.baths} Baths
+                  <div className="absolute bottom-4 left-4 bg-teal-600 text-white px-4 py-1 rounded-full text-sm">
+                    {property.propertyType || "Apartment"}
                   </div>
                 </div>
 
-                <button className="w-full mt-6 bg-slate-900 dark:bg-teal-500 text-white py-3 rounded-2xl flex items-center justify-center gap-2 hover:opacity-90 transition">
-                  View Details
-                  <ArrowUpRight size={18} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+                <div className="p-7">
+                  <div className="flex items-center gap-2 text-slate-500 text-sm">
+                    <MapPin size={18} />
+                    {property.location}
+                  </div>
 
-        {/* View All */}
+                  <h3 className="text-2xl font-semibold mt-3 leading-tight">{property.title}</h3>
+
+                  <p className="text-3xl font-bold text-teal-600 mt-4">
+                    ৳{property.rent}
+                    <span className="text-base font-normal text-slate-500">/month</span>
+                  </p>
+
+                  <div className="flex gap-6 mt-6 text-slate-600 dark:text-slate-400">
+                    <div className="flex items-center gap-2">
+                      <BedDouble size={20} /> {property.bedrooms || 3}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Bath size={20} /> {property.bathrooms || 2}
+                    </div>
+                  </div>
+
+                  <Link 
+                    href={`/properties/${property._id}`}
+                    className="mt-8 block w-full text-center py-4 bg-zinc-900 hover:bg-black text-white rounded-2xl font-semibold transition flex items-center justify-center gap-2"
+                  >
+                    View Details <ArrowRight size={20} />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="text-center mt-12">
-          <button className="px-8 py-3 rounded-2xl border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white transition">
-            View All Properties
-          </button>
+          <Link href="/properties" className="inline-flex items-center gap-3 text-teal-600 hover:text-teal-700 font-semibold text-lg">
+            Browse All Properties <ArrowRight />
+          </Link>
         </div>
       </div>
     </section>
