@@ -1,4 +1,3 @@
-// frontend/src/app/dashboard/layout.jsx
 "use client";
 
 import { useEffect, useState } from "react";

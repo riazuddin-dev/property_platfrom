@@ -1,4 +1,3 @@
-// src/components/shared/Navbar.jsx (Updated)
 "use client";
 
 import Link from "next/link";

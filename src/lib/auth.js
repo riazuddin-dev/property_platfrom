@@ -1,5 +1,7 @@
+
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
+import { jwt } from "better-auth/plugins";
 import { MongoClient } from "mongodb";
 
 const client = new MongoClient(process.env.MONGO_DB);
@@ -21,4 +23,14 @@ export const auth = betterAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     },
   },
+
+  session: {cookieCache:{
+    enabled: true,
+    expires: 60 * 60 * 24 * 30, 
+    strategy:"jwt"
+  }},
+
+plugins: [jwt()],
+
+
 });

@@ -1,55 +1,49 @@
+// src/app/dashboard/layout.jsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import { getUserRole } from "@/services/userApi";
+import { getUserRole } from "@/services/userApi"; // or direct from session
 
-export default function DashboardRedirect() {
+export default function DashboardLayout({ children }) {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
-  const [loading, setLoading] = useState(true);
+  const [role, setRole] = useState(null);
 
   useEffect(() => {
-    const redirectUser = async () => {
-      if (!session?.user?.email) {
-        router.push("/login");
-        return;
-      }
+    if (isPending) return;
+    if (!session?.user) {
+      router.replace("/login");
+      return;
+    }
 
+    const fetchRole = async () => {
       try {
-        const roleData = await getUserRole(session.user.email);
-        const role = roleData?.role || "tenant";
+        // Prefer backend role for consistency
+        const userRoleData = await getUserRole(session.user.email);
+        const userRole = userRoleData?.role || session.user.role || "tenant";
+        setRole(userRole);
 
-        if (role === "admin") {
-          router.push("/dashboard/admin");
-        } else if (role === "owner") {
-          router.push("/dashboard/owner");
-        } else {
-          router.push("/dashboard/tenant");
+        // Role-based redirect if on base /dashboard
+        const currentPath = window.location.pathname;
+        if (currentPath === "/dashboard") {
+          if (userRole === "admin") router.replace("/dashboard/admin");
+          else if (userRole === "owner") router.replace("/dashboard/owner");
+          else router.replace("/dashboard/tenant");
         }
-      } catch (error) {
-        console.error("Role fetch error:", error);
-        router.push("/dashboard/tenant"); // fallback
-      } finally {
-        setLoading(false);
+      } catch (err) {
+        console.error("Role fetch failed", err);
+        router.replace("/dashboard/tenant"); // fallback
       }
     };
 
-    if (!isPending && session) {
-      redirectUser();
-    } else if (!isPending && !session) {
-      router.push("/login");
-    }
+    fetchRole();
   }, [session, isPending, router]);
 
-  if (loading || isPending) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <span className="loading loading-spinner loading-lg text-teal-500"></span>
-      </div>
-    );
+  if (isPending || !role) {
+    return <div className="min-h-screen flex items-center justify-center"><span className="loading loading-spinner loading-lg"></span></div>;
   }
 
-  return null;
+  return <div>{children}</div>;
 }

@@ -18,33 +18,26 @@ export default function PaymentPage() {
   const [loading, setLoading] =
     useState(true);
 
-  useEffect(() => {
-    const loadPayment =
-      async () => {
-        try {
-          const result =
-            await createPaymentIntent(
-              100
-            );
+// In useEffect
+useEffect(() => {
+  const bookingData = JSON.parse(localStorage.getItem("bookingData") || "{}");
+  const amount = bookingData.rent || 100; // fallback
 
-          console.log(result);
+  const loadPayment = async () => {
+    try {
+      const result = await createPaymentIntent(amount);
+      if (result?.clientSecret) {
+        setClientSecret(result.clientSecret);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-          if (
-            result?.clientSecret
-          ) {
-            setClientSecret(
-              result.clientSecret
-            );
-          }
-        } catch (error) {
-          console.log(error);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-    loadPayment();
-  }, []);
+  loadPayment();
+}, []);
 
   if (loading) {
     return (

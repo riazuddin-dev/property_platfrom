@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import toast from "react-hot-toast";
 import { saveTransaction } from "@/services/paymentApi";
+import { addBooking } from "@/services/bookingApi";   // ← ADD THIS IMPORT
 import { useRouter } from "next/navigation";
 
 export default function CheckoutForm({ clientSecret }) {
@@ -37,27 +38,40 @@ export default function CheckoutForm({ clientSecret }) {
     }
 
     if (paymentIntent.status === "succeeded") {
-      toast.success("Payment Successful!");
+      toast.success("Payment Successful! 🎉");
 
-      const transactionData = {
-        amount: paymentIntent.amount / 100,   // Important: divide by 100
-        paymentIntentId: paymentIntent.id,
-        status: "succeeded",
-        currency: paymentIntent.currency || "usd",
-      };
+      const bookingData = JSON.parse(localStorage.getItem("bookingData") || "{}");
+      
+      if (!bookingData.propertyId) {
+        toast.error("Booking data missing");
+        setIsProcessing(false);
+        return;
+      }
 
       try {
-        const result = await saveTransaction(transactionData);
-        console.log("Transaction Save Result:", result);
+        // Save transaction
+        await saveTransaction({
+          amount: paymentIntent.amount / 100,
+          paymentIntentId: paymentIntent.id,
+          status: "succeeded",
+          currency: paymentIntent.currency || "usd",
+        });
+
+        // Create/Update Booking
+        await addBooking({
+          ...bookingData,
+          paymentIntentId: paymentIntent.id,
+          status: "approved",   // You can change to "paid" if you want owner confirmation
+        });
 
         localStorage.removeItem("bookingData");
         
         setTimeout(() => {
           router.push("/dashboard/tenant/bookings");
-        }, 1200);
+        }, 1500);
       } catch (err) {
-        console.error("Save transaction error:", err);
-        toast.error("Payment done but transaction save failed");
+        console.error("Post-payment error:", err);
+        toast.error("Payment succeeded but booking failed. Contact support.");
       }
     }
 
@@ -75,7 +89,7 @@ export default function CheckoutForm({ clientSecret }) {
         disabled={isProcessing || !stripe || !elements}
         className="w-full py-4 bg-teal-600 hover:bg-teal-700 text-white rounded-2xl font-semibold disabled:opacity-50"
       >
-        {isProcessing ? "Processing..." : `Pay Now`}
+        {isProcessing ? "Processing Payment..." : `Pay ৳${stripe?.price || 0}`}
       </button>
     </form>
   );
