@@ -1,17 +1,18 @@
 // src/app/payment/page.jsx
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import Swal from "sweetalert2";
 import { motion } from "framer-motion";
 import { authClient } from "@/lib/auth-client";
+import { useState, useEffect } from "react";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
-// ✅ Loading fallback component
+// Loading Component
 function PaymentLoading() {
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -23,7 +24,8 @@ function PaymentLoading() {
   );
 }
 
-function PaymentForm() {
+// Inner Component with useSearchParams
+function PaymentContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = authClient.useSession();
@@ -145,63 +147,8 @@ function PaymentForm() {
 
   if (!mounted) return null;
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <label className="block text-sm font-semibold text-slate-300 mb-2">
-          Card Details
-        </label>
-        <div className="p-4 bg-slate-800/50 border border-white/10 rounded-xl">
-          <CardElement
-            options={{
-              style: {
-                base: {
-                  fontSize: "16px",
-                  color: "#ffffff",
-                  "::placeholder": { color: "#94a3b8" },
-                },
-                invalid: { color: "#ef4444" },
-              },
-            }}
-          />
-        </div>
-      </div>
-
-      <button
-        type="submit"
-        disabled={!stripe || loading}
-        className="w-full py-4 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-      >
-        {loading ? (
-          <>
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            Processing...
-          </>
-        ) : (
-          <>Pay ৳{bookingData.amount?.toLocaleString()}</>
-        )}
-      </button>
-
-      <p className="text-xs text-slate-400 text-center flex items-center justify-center gap-1">
-        🔒 Secure payment powered by Stripe
-      </p>
-    </form>
-  );
-}
-
-export default function PaymentPage() {
-  const searchParams = useSearchParams();
-  const [mounted, setMounted] = useState(false);
-  const amount = parseFloat(searchParams.get("amount")) || 0;
-  const propertyTitle = searchParams.get("propertyTitle") || "Property";
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return <PaymentLoading />;
-  }
+  const amount = bookingData.amount || 0;
+  const propertyTitle = bookingData.propertyTitle || "Property";
 
   return (
     <div className="min-h-screen bg-slate-950 py-12">
@@ -236,13 +183,13 @@ export default function PaymentPage() {
             <div className="flex justify-between items-center pt-4">
               <div>
                 <p className="text-slate-400 text-sm mb-1">Tenant Name</p>
-                <p className="text-white font-semibold">{searchParams.get("tenantName")}</p>
+                <p className="text-white font-semibold">{bookingData.tenantName}</p>
               </div>
             </div>
             <div className="flex justify-between items-center pt-4">
               <div>
                 <p className="text-slate-400 text-sm mb-1">Move-in Date</p>
-                <p className="text-white font-semibold">{searchParams.get("moveInDate")}</p>
+                <p className="text-white font-semibold">{bookingData.moveInDate}</p>
               </div>
             </div>
             <div className="flex justify-between items-center pt-4">
@@ -262,7 +209,7 @@ export default function PaymentPage() {
         >
           <h3 className="text-xl font-bold text-white mb-6">💳 Payment Details</h3>
           <Elements stripe={stripePromise}>
-            <PaymentForm />
+            <PaymentFormInner onSubmit={handleSubmit} loading={loading} />
           </Elements>
         </motion.div>
 
@@ -278,5 +225,61 @@ export default function PaymentPage() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+// Card Element Component
+function PaymentFormInner({ onSubmit, loading }) {
+  const stripe = useStripe();
+  const elements = useElements();
+
+  return (
+    <form onSubmit={onSubmit} className="space-y-6">
+      <div>
+        <label className="block text-sm font-semibold text-slate-300 mb-2">
+          Card Details
+        </label>
+        <div className="p-4 bg-slate-800/50 border border-white/10 rounded-xl">
+          <CardElement
+            options={{
+              style: {
+                base: {
+                  fontSize: "16px",
+                  color: "#ffffff",
+                  "::placeholder": { color: "#94a3b8" },
+                },
+                invalid: { color: "#ef4444" },
+              },
+            }}
+          />
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        disabled={!stripe || loading}
+        className="w-full py-4 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+      >
+        {loading ? (
+          <>
+            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            Processing...
+          </>
+        ) : (
+          <>Pay</>
+        )}
+      </button>
+
+      <p className="text-xs text-slate-400 text-center">🔒 Secure payment powered by Stripe</p>
+    </form>
+  );
+}
+
+// Main Export - Wrapped in Suspense
+export default function PaymentPage() {
+  return (
+    <Suspense fallback={<PaymentLoading />}>
+      <PaymentContent />
+    </Suspense>
   );
 }
