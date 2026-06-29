@@ -1,49 +1,44 @@
-// src/app/dashboard/layout.jsx
+// src/app/dashboard/page.jsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import { getUserRole } from "@/services/userApi"; // or direct from session
+import { getUserRole } from "@/services/userApi";
+import { Loader2 } from "lucide-react";
 
-export default function DashboardLayout({ children }) {
+export default function DashboardPage() {
   const router = useRouter();
-  const { data: session, isPending } = authClient.useSession();
-  const [role, setRole] = useState(null);
+  const { data: session } = authClient.useSession();
 
   useEffect(() => {
-    if (isPending) return;
     if (!session?.user) {
       router.replace("/login");
       return;
     }
 
-    const fetchRole = async () => {
+    const redirect = async () => {
       try {
-        // Prefer backend role for consistency
-        const userRoleData = await getUserRole(session.user.email);
-        const userRole = userRoleData?.role || session.user.role || "tenant";
-        setRole(userRole);
+        const roleData = await getUserRole(session.user.email);
+        const role = roleData?.role || "tenant";
 
-        // Role-based redirect if on base /dashboard
-        const currentPath = window.location.pathname;
-        if (currentPath === "/dashboard") {
-          if (userRole === "admin") router.replace("/dashboard/admin");
-          else if (userRole === "owner") router.replace("/dashboard/owner");
-          else router.replace("/dashboard/tenant");
-        }
-      } catch (err) {
-        
-        router.replace("/dashboard/tenant"); // fallback
+        if (role === "admin") router.replace("/dashboard/admin");
+        else if (role === "owner") router.replace("/dashboard/owner");
+        else router.replace("/dashboard/tenant");
+      } catch {
+        router.replace("/dashboard/tenant");
       }
     };
 
-    fetchRole();
-  }, [session, isPending, router]);
+    redirect();
+  }, [session, router]);
 
-  if (isPending || !role) {
-    return <div className="min-h-screen flex items-center justify-center"><span className="loading loading-spinner loading-lg"></span></div>;
-  }
-
-  return <div>{children}</div>;
+  return (
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="text-center">
+        <Loader2 className="w-12 h-12 text-teal-500 animate-spin mx-auto" />
+        <p className="mt-4 text-slate-400">Redirecting to your dashboard...</p>
+      </div>
+    </div>
+  );
 }

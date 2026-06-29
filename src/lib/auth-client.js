@@ -1,18 +1,15 @@
-import { jwtClient } from "better-auth/client/plugins";
+// src/lib/auth-client.js
 import { createAuthClient } from "better-auth/react";
 
-export const authClient =
-  createAuthClient({
-    baseURL:
-      process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_BETTER_AUTH_URL ||
-      "http://localhost:3000",
-      plugins: [jwtClient()],
-  });
+export const authClient = createAuthClient({
+  baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000",
+  
+  fetchOptions: {
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  },
+});
 
-export const {
-  signIn,
-  signUp,
-  useSession,
-} = authClient;
-
-
+export const { signIn, signUp, signOut, useSession } = authClient;

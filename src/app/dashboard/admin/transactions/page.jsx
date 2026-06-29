@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAllAdminProperties, updatePropertyStatus } from "@/services/propertyApi";
+import { getAllPropertiesAdmin, updatePropertyStatus } from "@/services/propertyApi";
 import Swal from "sweetalert2";
 import { CheckCircle, XCircle, Eye } from "lucide-react";
 
@@ -14,11 +14,11 @@ export default function AdminProperties() {
     const loadProperties = async () => {
       try {
         setError(null);
-        const data = await getAllAdminProperties();
-        console.log("✅ Properties Data:", data);
+        const data = await getAllPropertiesAdmin()
+      
         setProperties(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error("❌ Properties Load Error:", err);
+       
         setError("Failed to load properties");
         setProperties([]);
       } finally {

@@ -1,20 +1,44 @@
+// src/services/reviewApi.js
 const API = process.env.NEXT_PUBLIC_API_URL;
 
+// Add new review
 export const addReview = async (reviewData) => {
-  const res = await fetch(`${API}/reviews`, {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(reviewData),
-  });
-
-  return res.json();
+  try {
+    const res = await fetch(`${API}/reviews`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(reviewData),
+    });
+    return await res.json();
+  } catch (error) {
+    console.error("addReview error:", error);
+    return { success: false };
+  }
 };
 
-export const getReviews = async (propertyId) => {
-  const res = await fetch(`${API}/reviews/${propertyId}`);
+// Get property reviews (Public)
+export const getPropertyReviews = async (propertyId) => {
+  try {
+    const res = await fetch(`${API}/reviews/${propertyId}`, {
+      credentials: "include",
+    });
+    return await res.json();
+  } catch (error) {
+    console.error("getPropertyReviews error:", error);
+    return [];
+  }
+};
 
-  return res.json();
+// Get user's reviews
+export const getUserReviews = async (userEmail) => {
+  try {
+    const allReviews = await getPropertyReviews(""); // Get all reviews
+    return allReviews.filter(review => review.reviewerEmail === userEmail);
+  } catch (error) {
+    console.error("getUserReviews error:", error);
+    return [];
+  }
 };

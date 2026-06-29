@@ -1,61 +1,72 @@
-const API =
-  process.env.NEXT_PUBLIC_API_URL;
+// src/services/userApi.js
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 // Get Single User
 export const getUserByEmail = async (email) => {
-  const res = await fetch(
-    `${API}/user/${email}`,
-    {
-      credentials: "include",
-    }
-  );
-
-  return res.json();
+  try {
+    const res = await fetch(`${API}/user/${email}`, {
+      credentials: "include", // ✅ Better Auth Cookie
+    });
+    return await res.json();
+  } catch (error) {
+    console.error("getUserByEmail error:", error);
+    return null;
+  }
 };
 
 // Get User Role
 export const getUserRole = async (email) => {
-  const res = await fetch(
-    `${API}/user-role/${email}`,
-    {
+  try {
+    const res = await fetch(`${API}/user-role/${email}`, {
       credentials: "include",
-    }
-  );
-
-  return res.json();
+    });
+    return await res.json();
+  } catch (error) {
+    console.error("getUserRole error:", error);
+    return { role: "tenant" }; // Fallback
+  }
 };
 
-// Get All Users
+// Get All Users (Admin)
 export const getAllUsers = async () => {
-  const res = await fetch(
-    `${API}/users`,
-    {
+  try {
+    const res = await fetch(`${API}/users`, {
       credentials: "include",
-    }
-  );
-
-  return res.json();
+    });
+    return await res.json();
+  } catch (error) {
+    console.error("getAllUsers error:", error);
+    return [];
+  }
 };
 
-// ✅ Add This
-export const updateUserRole = async (
-  id,
-  role
-) => {
-  const res = await fetch(
-    `${API}/users/role/${id}`,
-    {
+// Update User Role (Admin)
+export const updateUserRole = async (id, role) => {
+  try {
+    const res = await fetch(`${API}/users/role/${id}`, {
       method: "PATCH",
       headers: {
-        "Content-Type":
-          "application/json",
+        "Content-Type": "application/json",
       },
       credentials: "include",
-      body: JSON.stringify({
-        role,
-      }),
-    }
-  );
+      body: JSON.stringify({ role }),
+    });
+    return await res.json();
+  } catch (error) {
+    console.error("updateUserRole error:", error);
+    return { success: false };
+  }
+};
 
-  return res.json();
+// Get Dashboard Stats
+export const getDashboardStats = async () => {
+  try {
+    const res = await fetch(`${API}/dashboard-stats`, {
+      credentials: "include",
+    });
+    return await res.json();
+  } catch (error) {
+    console.error("getDashboardStats error:", error);
+    return null;
+  }
 };

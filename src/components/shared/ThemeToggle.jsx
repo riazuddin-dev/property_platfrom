@@ -1,9 +1,10 @@
-// src/components/shared/ThemeToggle.jsx
+
 "use client";
 
+import { useTheme } from "@/providers/ThemeContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sun, Moon } from "lucide-react";
-import { useTheme } from "@/context/ThemeContext";
+
 
 export default function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();

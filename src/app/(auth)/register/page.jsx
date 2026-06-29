@@ -2,11 +2,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User, Mail, Lock, ImageIcon, Eye, EyeOff, Loader2 } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { useForm } from "react-hook-form";
 import { authClient } from "@/lib/auth-client";
+import { saveUser } from "@/services/authApi";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
@@ -14,10 +15,34 @@ export default function RegisterPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
 
+  // ✅ Better Auth session check
+  const { data: session, isPending } = authClient.useSession();
+
   const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm();
+
+  // ✅ If already logged in, redirect to dashboard
+  useEffect(() => {
+    if (!isPending && session?.user) {
+      toast.success("Already logged in! Redirecting...");
+      router.replace("/dashboard");
+    }
+  }, [session, isPending, router]);
+
+  // Loading state
+  if (isPending) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-600 dark:text-slate-400">Checking session...</p>
+        </div>
+      </div>
+    );
+  }
 
   const onSubmit = async (data) => {
     try {
+      // Step 1: Sign up with Better Auth
       const result = await authClient.signUp.email({
         name: data.name,
         email: data.email,
@@ -25,39 +50,41 @@ export default function RegisterPage() {
         image: data.image || "https://i.pravatar.cc/150?img=12",
       });
 
-      if (result?.data) {
-        // Save user to database - by default role is "tenant"
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/save-user`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: data.name,
-            email: data.email,
-            image: data.image || "https://i.pravatar.cc/150?img=12",
-            role: "tenant", // ✅ Default role: Tenant
-          }),
-        });
+      if (result?.error) {
+        toast.error(result.error.message || "Registration failed");
+        return;
+      }
 
+      // Step 2: Save user to database with default role "tenant"
+      const saveResult = await saveUser({
+        name: data.name,
+        email: data.email,
+        image: data.image || "https://i.pravatar.cc/150?img=12",
+        role: "tenant", // ✅ Default role
+      });
+
+      if (saveResult?.success) {
         reset();
-        toast.success("Account Created Successfully! 🎉 Please Login");
-        router.push("/login");
+        toast.success("Account Created Successfully! 🎉 Welcome to StaySphere");
+        router.replace("/dashboard");
+      } else {
+        toast.error("Failed to save user data");
       }
     } catch (error) {
-      console.error(error);
+      console.error("Registration error:", error);
       toast.error("Registration Failed. Try different email.");
     }
   };
 
   const handleGoogle = async () => {
     try {
-      // ✅ Google login এ by default Tenant role set হবে
-      await authClient.signIn.social({ provider: "google" });
-      
-      // Google login এর পর user save হবে with tenant role
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/dashboard",
+      });
       toast.success("Redirecting...");
-      router.replace("/");
     } catch (error) {
-      console.error(error);
+      console.error("Google registration error:", error);
       toast.error("Google registration failed");
     }
   };
@@ -72,7 +99,7 @@ export default function RegisterPage() {
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/50 to-transparent" />
-        
+
         <div className="absolute bottom-16 left-16 z-10 text-white max-w-md">
           <h1 className="text-6xl font-bold tracking-tighter">
             Stay<span className="text-teal-400">Sphere</span>
@@ -87,14 +114,20 @@ export default function RegisterPage() {
       <div className="flex items-center justify-center px-6 py-12 bg-slate-50 dark:bg-slate-950">
         <div className="w-full max-w-md">
           <div className="text-center mb-10">
-            <h2 className="text-4xl font-bold text-slate-900 dark:text-white">Create Account 🚀</h2>
-            <p className="mt-3 text-slate-500 dark:text-slate-400">Start your rental journey today</p>
+            <h2 className="text-4xl font-bold text-slate-900 dark:text-white">
+              Create Account 🚀
+            </h2>
+            <p className="mt-3 text-slate-500 dark:text-slate-400">
+              Start your rental journey today
+            </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Name */}
             <div>
-              <label className="font-medium block mb-2 text-slate-700 dark:text-slate-300">Full Name</label>
+              <label className="font-medium block mb-2 text-slate-700 dark:text-slate-300">
+                Full Name
+              </label>
               <div className="flex items-center gap-3 border border-slate-300 dark:border-slate-700 rounded-2xl px-5 py-4 bg-white dark:bg-slate-900">
                 <User size={20} className="text-slate-400" />
                 <input
@@ -108,7 +141,9 @@ export default function RegisterPage() {
 
             {/* Photo URL */}
             <div>
-              <label className="font-medium mb-2 block text-slate-700 dark:text-slate-300">Photo URL (Optional)</label>
+              <label className="font-medium mb-2 block text-slate-700 dark:text-slate-300">
+                Photo URL (Optional)
+              </label>
               <div className="flex items-center gap-3 border border-slate-300 dark:border-slate-700 rounded-2xl px-5 py-4 bg-white dark:bg-slate-900">
                 <ImageIcon size={20} className="text-slate-400" />
                 <input
@@ -122,7 +157,9 @@ export default function RegisterPage() {
 
             {/* Email */}
             <div>
-              <label className="font-medium block mb-2 text-slate-700 dark:text-slate-300">Email Address</label>
+              <label className="font-medium block mb-2 text-slate-700 dark:text-slate-300">
+                Email Address
+              </label>
               <div className="flex items-center gap-3 border border-slate-300 dark:border-slate-700 rounded-2xl px-5 py-4 bg-white dark:bg-slate-900">
                 <Mail size={20} className="text-slate-400" />
                 <input
@@ -136,7 +173,9 @@ export default function RegisterPage() {
 
             {/* Password */}
             <div>
-              <label className="font-medium block mb-2 text-slate-700 dark:text-slate-300">Password</label>
+              <label className="font-medium block mb-2 text-slate-700 dark:text-slate-300">
+                Password
+              </label>
               <div className="flex items-center gap-3 border border-slate-300 dark:border-slate-700 rounded-2xl px-5 py-4 bg-white dark:bg-slate-900">
                 <Lock size={20} className="text-slate-400" />
                 <input
@@ -158,7 +197,8 @@ export default function RegisterPage() {
             {/* Info Note */}
             <div className="bg-teal-500/10 dark:bg-teal-500/20 border border-teal-500/20 rounded-xl p-4">
               <p className="text-sm text-teal-700 dark:text-teal-300">
-                💡 <strong>Note:</strong> All new accounts are created as <strong>Tenant</strong> by default. You can request to become an Owner from your dashboard.
+                💡 <strong>Note:</strong> All new accounts are created as{" "}
+                <strong>Tenant</strong> by default.
               </p>
             </div>
 
@@ -192,13 +232,18 @@ export default function RegisterPage() {
               className="w-full border border-slate-300 dark:border-slate-700 py-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-slate-100 dark:hover:bg-slate-900 transition bg-white dark:bg-slate-900"
             >
               <FcGoogle size={24} />
-              <span className="font-medium text-slate-900 dark:text-white">Continue with Google</span>
+              <span className="font-medium text-slate-900 dark:text-white">
+                Continue with Google
+              </span>
             </button>
           </form>
 
           <p className="text-center mt-8 text-slate-500 dark:text-slate-400">
             Already have an account?{" "}
-            <Link href="/login" className="text-teal-500 font-medium hover:underline">
+            <Link
+              href="/login"
+              className="text-teal-500 font-medium hover:underline"
+            >
               Sign In
             </Link>
           </p>
