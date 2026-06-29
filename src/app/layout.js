@@ -2,6 +2,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,16 +21,47 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {children}
-        <Toaster 
-          position="top-center"
-          toastOptions={{
-            success: { duration: 3000, style: { background: '#10b981', color: 'white' } },
-            error: { duration: 4000, style: { background: '#ef4444', color: 'white' } },
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Inline script to prevent flash of unstyled content */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('theme');
+                  if (!theme) {
+                    theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                  }
+                  document.documentElement.classList.add(theme);
+                  document.documentElement.style.colorScheme = theme;
+                } catch (e) {
+                  document.documentElement.classList.add('dark');
+                }
+              })();
+            `,
           }}
         />
+      </head>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-300`}
+      >
+        <ThemeProvider>
+          {children}
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              success: {
+                duration: 3000,
+                style: { background: "#10b981", color: "white" },
+              },
+              error: {
+                duration: 4000,
+                style: { background: "#ef4444", color: "white" },
+              },
+            }}
+          />
+        </ThemeProvider>
       </body>
     </html>
   );
