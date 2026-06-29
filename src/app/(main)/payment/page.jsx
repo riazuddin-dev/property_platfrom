@@ -24,39 +24,28 @@ function PaymentLoading() {
   );
 }
 
-// Inner Component with useSearchParams
-function PaymentContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { data: session } = authClient.useSession();
+// ✅ Stripe Form Component - এটাই <Elements> এর ভিতরে থাকবে
+function StripePaymentForm({ bookingData, onSuccess }) {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const bookingData = {
-    propertyId: searchParams.get("propertyId"),
-    propertyTitle: searchParams.get("propertyTitle"),
-    propertyImage: searchParams.get("propertyImage"),
-    tenantEmail: searchParams.get("tenantEmail"),
-    tenantName: searchParams.get("tenantName"),
-    ownerEmail: searchParams.get("ownerEmail"),
-    ownerName: searchParams.get("ownerName"),
-    amount: parseFloat(searchParams.get("amount")),
-    moveInDate: searchParams.get("moveInDate"),
-    contactNumber: searchParams.get("contactNumber"),
-    additionalNotes: searchParams.get("additionalNotes"),
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!stripe || !elements) {
+      Swal.fire({
+        icon: "error",
+        title: "Stripe not loaded",
+        text: "Please wait and try again",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
+      // 1️ Create Payment Intent
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/create-payment-intent`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -66,6 +55,7 @@ function PaymentContent() {
 
       const { clientSecret } = await res.json();
 
+      // 2️⃣ Confirm Payment
       const result = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
           card: elements.getElement(CardElement),
@@ -79,6 +69,7 @@ function PaymentContent() {
           text: result.error.message,
         });
       } else if (result.paymentIntent.status === "succeeded") {
+        // 3️⃣ Create Booking
         const bookingRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/bookings`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -95,6 +86,7 @@ function PaymentContent() {
         const bookingResult = await bookingRes.json();
 
         if (bookingRes.ok) {
+          // 4️⃣ Save Transaction
           await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -122,9 +114,7 @@ function PaymentContent() {
             showConfirmButton: false,
           });
 
-          setTimeout(() => {
-            router.push("/dashboard/tenant/my-bookings");
-          }, 2000);
+          if (onSuccess) onSuccess();
         } else {
           Swal.fire({
             icon: "error",
@@ -145,96 +135,8 @@ function PaymentContent() {
     }
   };
 
-  if (!mounted) return null;
-
-  const amount = bookingData.amount || 0;
-  const propertyTitle = bookingData.propertyTitle || "Property";
-
   return (
-    <div className="min-h-screen bg-slate-950 py-12">
-      <div className="max-w-4xl mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Complete Payment
-          </h1>
-          <p className="text-slate-400">
-            Secure payment processing for your booking
-          </p>
-        </motion.div>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-8 mb-8"
-        >
-          <h2 className="text-2xl font-bold text-white mb-6">📋 Booking Summary</h2>
-          <div className="space-y-4 divide-y divide-white/5">
-            <div className="flex justify-between items-center pt-4">
-              <div>
-                <p className="text-slate-400 text-sm mb-1">Property</p>
-                <p className="text-white font-semibold text-lg">{propertyTitle}</p>
-              </div>
-            </div>
-            <div className="flex justify-between items-center pt-4">
-              <div>
-                <p className="text-slate-400 text-sm mb-1">Tenant Name</p>
-                <p className="text-white font-semibold">{bookingData.tenantName}</p>
-              </div>
-            </div>
-            <div className="flex justify-between items-center pt-4">
-              <div>
-                <p className="text-slate-400 text-sm mb-1">Move-in Date</p>
-                <p className="text-white font-semibold">{bookingData.moveInDate}</p>
-              </div>
-            </div>
-            <div className="flex justify-between items-center pt-4">
-              <div>
-                <p className="text-slate-400 text-sm mb-1">Total Amount</p>
-                <p className="text-teal-400 text-3xl font-bold">৳{amount.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-8"
-        >
-          <h3 className="text-xl font-bold text-white mb-6">💳 Payment Details</h3>
-          <Elements stripe={stripePromise}>
-            <PaymentFormInner onSubmit={handleSubmit} loading={loading} />
-          </Elements>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="mt-6 text-center"
-        >
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-sm">
-            🔒 Your payment information is encrypted and secure
-          </div>
-        </motion.div>
-      </div>
-    </div>
-  );
-}
-
-// Card Element Component
-function PaymentFormInner({ onSubmit, loading }) {
-  const stripe = useStripe();
-  const elements = useElements();
-
-  return (
-    <form onSubmit={onSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <label className="block text-sm font-semibold text-slate-300 mb-2">
           Card Details
@@ -266,7 +168,7 @@ function PaymentFormInner({ onSubmit, loading }) {
             Processing...
           </>
         ) : (
-          <>Pay</>
+          <>Pay ৳{bookingData.amount?.toLocaleString()}</>
         )}
       </button>
 
@@ -275,7 +177,124 @@ function PaymentFormInner({ onSubmit, loading }) {
   );
 }
 
-// Main Export - Wrapped in Suspense
+// ✅ Main Payment Content - useSearchParams এখানে থাকবে
+function PaymentContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const bookingData = {
+    propertyId: searchParams.get("propertyId"),
+    propertyTitle: searchParams.get("propertyTitle"),
+    propertyImage: searchParams.get("propertyImage"),
+    tenantEmail: searchParams.get("tenantEmail"),
+    tenantName: searchParams.get("tenantName"),
+    ownerEmail: searchParams.get("ownerEmail"),
+    ownerName: searchParams.get("ownerName"),
+    amount: parseFloat(searchParams.get("amount")),
+    moveInDate: searchParams.get("moveInDate"),
+    contactNumber: searchParams.get("contactNumber"),
+    additionalNotes: searchParams.get("additionalNotes"),
+  };
+
+  const handlePaymentSuccess = () => {
+    setTimeout(() => {
+      router.push("/dashboard/tenant/my-bookings");
+    }, 2000);
+  };
+
+  if (!mounted) return null;
+
+  const amount = bookingData.amount || 0;
+  const propertyTitle = bookingData.propertyTitle || "Property";
+
+  return (
+    <div className="min-h-screen bg-slate-950 py-12">
+      <div className="max-w-4xl mx-auto px-6">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            Complete Payment
+          </h1>
+          <p className="text-slate-400">
+            Secure payment processing for your booking
+          </p>
+        </motion.div>
+        
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-8 mb-8"
+        >
+          <h2 className="text-2xl font-bold text-white mb-6"> Booking Summary</h2>
+          <div className="space-y-4 divide-y divide-white/5">
+            <div className="flex justify-between items-center pt-4">
+              <div>
+                <p className="text-slate-400 text-sm mb-1">Property</p>
+                <p className="text-white font-semibold text-lg">{propertyTitle}</p>
+              </div>
+            </div>
+            <div className="flex justify-between items-center pt-4">
+              <div>
+                <p className="text-slate-400 text-sm mb-1">Tenant Name</p>
+                <p className="text-white font-semibold">{bookingData.tenantName}</p>
+              </div>
+            </div>
+            <div className="flex justify-between items-center pt-4">
+              <div>
+                <p className="text-slate-400 text-sm mb-1">Move-in Date</p>
+                <p className="text-white font-semibold">{bookingData.moveInDate}</p>
+              </div>
+            </div>
+            <div className="flex justify-between items-center pt-4">
+              <div>
+                <p className="text-slate-400 text-sm mb-1">Total Amount</p>
+                <p className="text-teal-400 text-3xl font-bold">৳{amount.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ✅ Elements Provider এখানে */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-8"
+        >
+          <h3 className="text-xl font-bold text-white mb-6">💳 Payment Details</h3>
+          <Elements stripe={stripePromise}>
+            <StripePaymentForm 
+              bookingData={bookingData} 
+              onSuccess={handlePaymentSuccess} 
+            />
+          </Elements>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="mt-6 text-center"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-sm">
+            🔒 Your payment information is encrypted and secure
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+// ✅ Main Export with Suspense
 export default function PaymentPage() {
   return (
     <Suspense fallback={<PaymentLoading />}>
