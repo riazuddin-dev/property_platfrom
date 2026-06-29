@@ -17,74 +17,42 @@ export default function BookingModal({ property, onClose }) {
     additionalNotes: "",
   });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ // src/components/shared/booking/BookingModel.jsx
 
-    if (!formData.moveInDate || !formData.contactNumber) {
-      Swal.fire({
-        icon: "warning",
-        title: "Missing Information",
-        text: "Please fill in all required fields"
-      });
-      return;
-    }
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    setLoading(true);
-    try {
-      const bookingData = {
-        propertyId: property._id,
-        propertyTitle: property.title,
-        propertyImage: property.image || property.images?.[0],
-        tenantEmail: session.user.email,
-        tenantName: session.user.name,
-        ownerEmail: property.ownerEmail,
-        ownerName: property.ownerName,
-        moveInDate: formData.moveInDate,
-        contactNumber: formData.contactNumber,
-        additionalNotes: formData.additionalNotes,
-        amount: property.rent,
-        status: "pending",
-      };
+  if (!formData.moveInDate || !formData.contactNumber) {
+    Swal.fire({
+      icon: "warning",
+      title: "Missing Information",
+      text: "Please fill in all required fields"
+    });
+    return;
+  }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/bookings`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(bookingData)
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        Swal.fire({
-          icon: "success",
-          title: "Booking Created!",
-          text: "Redirecting to payment..."
-        });
-        
-        onClose();
-        
-        // Redirect to payment
-        setTimeout(() => {
-          router.push(`/payment?bookingId=${data.insertedId}&amount=${property.rent}`);
-        }, 1500);
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: data.message || "Booking failed"
-        });
-      }
-    } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Booking failed"
-      });
-    } finally {
-      setLoading(false);
-    }
+  // ✅ শুধু payment page এ redirect করুন - booking create করবেন না
+  onClose();
+  
+  // Payment page এ booking data পাঠান
+  const bookingData = {
+    propertyId: property._id,
+    propertyTitle: property.title,
+    propertyImage: property.image || property.images?.[0],
+    tenantEmail: session.user.email,
+    tenantName: session.user.name,
+    ownerEmail: property.ownerEmail,
+    ownerName: property.ownerName,
+    moveInDate: formData.moveInDate,
+    contactNumber: formData.contactNumber,
+    additionalNotes: formData.additionalNotes,
+    amount: property.rent,
   };
+
+  // URL query params এ data পাঠান
+  const queryParams = new URLSearchParams(bookingData).toString();
+  router.push(`/payment?${queryParams}`);
+};
 
   return (
     <motion.div

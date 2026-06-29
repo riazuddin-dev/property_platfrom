@@ -23,18 +23,20 @@ export default function FavoritesPage() {
   const loadFavorites = async () => {
     try {
       const data = await getFavorites();
-      console.log("Favorites API Response:", data);
-
+      console.log("Favorites API Response:", data); // Debug log
+      
+      // ✅ Ensure data is an array
       if (Array.isArray(data)) {
         setFavorites(data);
       } else if (data && Array.isArray(data.favorites)) {
+        // If API returns { favorites: [...] }
         setFavorites(data.favorites);
       } else {
         setFavorites([]);
       }
     } catch (error) {
       console.error("Error loading favorites:", error);
-      setFavorites([]);
+      setFavorites([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -55,7 +57,8 @@ export default function FavoritesPage() {
     if (result.isConfirmed) {
       try {
         await removeFromFavorites(id);
-        setFavorites(favorites.filter((fav) => fav._id !== id));
+        // ✅ Remove from local state
+        setFavorites(favorites.filter(fav => fav._id !== id));
         Swal.fire({
           title: "Removed!",
           text: "Property removed from favorites",
@@ -79,9 +82,7 @@ export default function FavoritesPage() {
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-600 dark:text-slate-400">
-            Loading favorites...
-          </p>
+          <p className="text-slate-600 dark:text-slate-400">Loading favorites...</p>
         </div>
       </div>
     );
@@ -112,10 +113,7 @@ export default function FavoritesPage() {
             animate={{ opacity: 1, scale: 1 }}
             className="text-center py-20 bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-white/10"
           >
-            <Home
-              className="mx-auto text-slate-300 dark:text-slate-600 mb-4"
-              size={64}
-            />
+            <Home className="mx-auto text-slate-300 dark:text-slate-600 mb-4" size={64} />
             <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
               No favorites yet
             </h3>
@@ -143,11 +141,8 @@ export default function FavoritesPage() {
                 {/* Property Image */}
                 <div className="relative h-48 overflow-hidden">
                   <img
-                    src={
-                      favorite.propertyImage ||
-                      "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400"
-                    }
-                    alt={favorite.propertyTitle}
+                    src={favorite.propertyId?.image || favorite.propertyId?.propertyImage || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400"}
+                    alt={favorite.propertyId?.title || favorite.propertyId?.propertyTitle}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute top-4 right-4">
@@ -164,34 +159,32 @@ export default function FavoritesPage() {
                 {/* Property Details */}
                 <div className="p-5">
                   <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 line-clamp-2">
-                    {favorite.propertyTitle}
+                    {favorite.propertyId?.title || favorite.propertyId?.propertyTitle}
                   </h3>
-
+                  
                   <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mb-4">
                     <MapPin size={16} />
-                    <span className="text-sm">{favorite.location}</span>
+                    <span className="text-sm">{favorite.propertyId?.location}</span>
                   </div>
 
                   <div className="flex items-center gap-4 mb-4 text-sm text-slate-600 dark:text-slate-400">
                     <div className="flex items-center gap-1">
                       <Bed size={16} />
-                      <span>{favorite.bedrooms || "N/A"} Beds</span>
+                      <span>{favorite.propertyId?.bedrooms || 'N/A'} Beds</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Bath size={16} />
-                      <span>{favorite.bathrooms || "N/A"} Baths</span>
+                      <span>{favorite.propertyId?.bathrooms || 'N/A'} Baths</span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-white/10">
                     <p className="text-2xl font-bold text-teal-500">
-                      ৳{favorite.rent?.toLocaleString() || "N/A"}
-                      <span className="text-sm text-slate-500 font-normal">
-                        /month
-                      </span>
+                      ৳{favorite.propertyId?.rent?.toLocaleString() || 'N/A'}
+                      <span className="text-sm text-slate-500 font-normal">/month</span>
                     </p>
                     <Link
-                      href={`/property/${favorite.propertyId || favorite.property_id || favorite._propertyId || favorite.property?._id || favorite._id}`}
+                      href={`/property/${favorite.propertyId?._id}`}
                       className="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-xl font-semibold text-sm transition"
                     >
                       View Details

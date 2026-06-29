@@ -126,27 +126,42 @@ export default function PropertyDetailsPage() {
   };
 
   const handleBookNow = () => {
-    if (!session?.user) {
-      Swal.fire({
-        icon: "warning",
-        title: "Login Required",
-        text: "Please login to book this property"
-      });
-      router.push("/login");
-      return;
-    }
+  // Login check
+  if (!session?.user) {
+    Swal.fire({
+      icon: "warning",
+      title: "Login Required",
+      text: "Please login to book this property"
+    });
+    router.push("/login");
+    return;
+  }
 
-    if (session.user.email === property.ownerEmail) {
-      Swal.fire({
-        icon: "error",
-        title: "Cannot Book",
-        text: "You cannot book your own property"
-      });
-      return;
-    }
+  // ✅ শুধু tenant না হলে block করবে
+  const userRole = session.user.role?.toLowerCase();
+  
+  if (userRole && userRole !== "tenant") {
+    Swal.fire({
+      icon: "error",
+      title: "Access Denied",
+      text: `Your role is "${session.user.role}". Only tenants can book properties.`
+    });
+    return;
+  }
 
-    setShowBookingModal(true);
-  };
+  // Cannot book own property
+  if (session.user.email === property.ownerEmail) {
+    Swal.fire({
+      icon: "error",
+      title: "Cannot Book",
+      text: "You cannot book your own property"
+    });
+    return;
+  }
+
+  // ✅ সব ঠিক থাকলে modal খুলবে
+  setShowBookingModal(true);
+};
 
   if (loading) {
     return (
