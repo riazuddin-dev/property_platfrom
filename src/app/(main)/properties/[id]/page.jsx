@@ -395,6 +395,38 @@ export default function PropertyDetailsPage() {
               </motion.div>
             )}
 
+            {/* Simulated Location Map */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-8"
+            >
+              <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                <MapPin className="text-teal-400" size={24} />
+                Location Map
+              </h2>
+              <div className="relative h-64 w-full rounded-2xl overflow-hidden border border-white/10">
+                {/* Simulated Grid Map Background */}
+                <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
+                  <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+                  <div className="relative z-10 size-14 rounded-full bg-teal-500/10 border border-teal-500/30 flex items-center justify-center mb-4 animate-bounce">
+                    <MapPin className="text-teal-400" size={28} />
+                  </div>
+                  <p className="relative z-10 font-bold text-white text-lg mb-1">{property.location}</p>
+                  <p className="relative z-10 text-sm text-slate-400 max-w-sm mb-5">Transit details and surrounding landmarks are available upon booking confirmation.</p>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.location)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="relative z-10 px-6 py-3 bg-slate-900 hover:bg-slate-800 text-teal-400 hover:text-white border border-teal-500/20 hover:border-teal-500/50 rounded-xl text-xs font-semibold transition-all duration-200"
+                  >
+                    Open in Google Maps
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+
             {/* Reviews Section */}
             <ReviewSection propertyId={params.id} />
           </div>
@@ -477,6 +509,15 @@ export default function PropertyDetailsPage() {
                   <Mail size={18} className="text-teal-400" />
                   <span className="text-sm text-slate-300 group-hover:text-white transition">{property.ownerEmail}</span>
                 </a>
+                {property.ownerPhone && (
+                  <a
+                    href={`tel:${property.ownerPhone}`}
+                    className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-xl hover:bg-slate-800 transition group"
+                  >
+                    <Phone size={18} className="text-teal-400" />
+                    <span className="text-sm text-slate-300 group-hover:text-white transition">{property.ownerPhone}</span>
+                  </a>
+                )}
               </div>
             </motion.div>
           </div>

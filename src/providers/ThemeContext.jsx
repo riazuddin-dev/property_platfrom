@@ -10,14 +10,7 @@ export function ThemeProvider({ children }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("theme");
-    if (stored) {
-      setTheme(stored);
-    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setTheme("dark");
-    } else {
-      setTheme("light");
-    }
+    setTheme("dark");
     setMounted(true);
   }, []);
 
@@ -25,19 +18,15 @@ export function ThemeProvider({ children }) {
     if (!mounted) return;
     
     const root = document.documentElement;
+    root.classList.remove("light");
+    root.classList.add("dark");
+    root.style.colorScheme = "dark";
     
-    // Remove both classes first
-    root.classList.remove("dark", "light");
-    
-    // Add the correct class
-    root.classList.add(theme);
-    root.style.colorScheme = theme;
-    
-    localStorage.setItem("theme", theme);
-  }, [theme, mounted]);
+    localStorage.setItem("theme", "dark");
+  }, [mounted]);
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+    // Keep locked to dark
   };
 
   if (!mounted) {

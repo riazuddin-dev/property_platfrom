@@ -70,9 +70,9 @@ export default function DashboardLayout({ children }) {
   if (!session?.user) return null;
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-slate-50 dark:bg-slate-950">
       <DashboardSidebar />
-      <main className="flex-1 overflow-x-hidden">
+      <main className="flex-1 overflow-x-hidden pt-20 lg:pt-0">
         {children}
       </main>
     </div>

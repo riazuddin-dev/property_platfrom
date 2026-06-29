@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { usePathname } from "next/navigation";
-import ThemeToggle from "./ThemeToggle";
 
 const navLinks = [
   { name: "Home", href: "/", icon: Home },
@@ -165,7 +164,6 @@ export default function Navbar() {
                   <Bell size={18} className="text-slate-300" />
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-teal-400 rounded-full animate-pulse" />
                 </motion.button>
-                <ThemeToggle></ThemeToggle>
 
                 {/* Dashboard Button */}
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -368,7 +366,6 @@ export default function Navbar() {
                     </motion.div>
                   );
                 })}
-                <ThemeToggle></ThemeToggle>
 
                 {/* User Section */}
                 <div className="pt-4 mt-4 border-t border-white/10 space-y-2">
