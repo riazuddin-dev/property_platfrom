@@ -33,7 +33,7 @@ export default function DashboardLayout({ children }) {
           else router.replace("/dashboard/tenant");
         }
       } catch (err) {
-        console.error("Role fetch failed", err);
+        
         router.replace("/dashboard/tenant"); // fallback
       }
     };
