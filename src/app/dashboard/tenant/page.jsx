@@ -23,7 +23,11 @@ export default function TenantDashboard() {
           getMyBookings(),
         ]);
         setStats(statsData);
-        setBookings(bookingsData.slice(0, 3)); // Show only 3 recent
+        if (Array.isArray(bookingsData)) {
+          setBookings(bookingsData.slice(0, 3)); // Show only 3 recent
+        } else {
+          setBookings([]);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {

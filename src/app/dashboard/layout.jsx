@@ -34,6 +34,15 @@ export default function DashboardLayout({ children }) {
           if (userRole === "admin") router.replace("/dashboard/admin");
           else if (userRole === "owner") router.replace("/dashboard/owner");
           else router.replace("/dashboard/tenant");
+        } else if (pathname.startsWith("/dashboard/admin") && userRole !== "admin") {
+          if (userRole === "owner") router.replace("/dashboard/owner");
+          else router.replace("/dashboard/tenant");
+        } else if (pathname.startsWith("/dashboard/owner") && userRole !== "owner") {
+          if (userRole === "admin") router.replace("/dashboard/admin");
+          else router.replace("/dashboard/tenant");
+        } else if (pathname.startsWith("/dashboard/tenant") && userRole !== "tenant") {
+          if (userRole === "admin") router.replace("/dashboard/admin");
+          else if (userRole === "owner") router.replace("/dashboard/owner");
         }
       } catch (error) {
         console.error("Role fetch error:", error);

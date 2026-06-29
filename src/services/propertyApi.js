@@ -1,4 +1,6 @@
 // src/services/propertyApi.js
+import { fetchWithAuth } from "@/utils/api";
+
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 // Get all properties (Public with filters)
@@ -22,9 +24,7 @@ export const getAllProperties = async (page = 1, limit = 6, filters = {}) => {
       sort,
     });
 
-    const res = await fetch(`${API}/properties?${params.toString()}`, {
-      credentials: "include",
-    });
+    const res = await fetchWithAuth(`${API}/properties?${params.toString()}`);
     return await res.json();
   } catch (error) {
     console.error("getAllProperties error:", error);
@@ -35,9 +35,7 @@ export const getAllProperties = async (page = 1, limit = 6, filters = {}) => {
 // Get single property (Public)
 export const getPropertyById = async (id) => {
   try {
-    const res = await fetch(`${API}/property/${id}`, {
-      credentials: "include",
-    });
+    const res = await fetchWithAuth(`${API}/property/${id}`);
     return await res.json();
   } catch (error) {
     console.error("getPropertyById error:", error);
@@ -48,12 +46,8 @@ export const getPropertyById = async (id) => {
 // Add new property (Owner only)
 export const addProperty = async (propertyData) => {
   try {
-    const res = await fetch(`${API}/properties`, {
+    const res = await fetchWithAuth(`${API}/properties`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
       body: JSON.stringify(propertyData),
     });
     return await res.json();
@@ -66,12 +60,8 @@ export const addProperty = async (propertyData) => {
 // Update property (Owner only)
 export const updateProperty = async (id, updatedData) => {
   try {
-    const res = await fetch(`${API}/property/${id}`, {
+    const res = await fetchWithAuth(`${API}/property/${id}`, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
       body: JSON.stringify(updatedData),
     });
     return await res.json();
@@ -84,9 +74,8 @@ export const updateProperty = async (id, updatedData) => {
 // Delete property (Owner only)
 export const deleteProperty = async (id) => {
   try {
-    const res = await fetch(`${API}/properties/${id}`, {
+    const res = await fetchWithAuth(`${API}/properties/${id}`, {
       method: "DELETE",
-      credentials: "include",
     });
     return await res.json();
   } catch (error) {
@@ -98,9 +87,7 @@ export const deleteProperty = async (id) => {
 // Get owner's properties
 export const getMyProperties = async (email) => {
   try {
-    const res = await fetch(`${API}/my-properties/${email}`, {
-      credentials: "include",
-    });
+    const res = await fetchWithAuth(`${API}/my-properties/${email}`);
     return await res.json();
   } catch (error) {
     console.error("getMyProperties error:", error);
@@ -111,9 +98,7 @@ export const getMyProperties = async (email) => {
 // Get all properties (Admin only)
 export const getAllPropertiesAdmin = async () => {
   try {
-    const res = await fetch(`${API}/all-properties`, {
-      credentials: "include",
-    });
+    const res = await fetchWithAuth(`${API}/all-properties`);
     return await res.json();
   } catch (error) {
     console.error("getAllPropertiesAdmin error:", error);
@@ -124,12 +109,8 @@ export const getAllPropertiesAdmin = async () => {
 // Update property status (Admin only)
 export const updatePropertyStatus = async (id, status, feedback = "") => {
   try {
-    const res = await fetch(`${API}/property-status/${id}`, {
+    const res = await fetchWithAuth(`${API}/property-status/${id}`, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
       body: JSON.stringify({ status, feedback }),
     });
     return await res.json();

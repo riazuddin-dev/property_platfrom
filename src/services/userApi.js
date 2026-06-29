@@ -1,12 +1,12 @@
 // src/services/userApi.js
+import { fetchWithAuth } from "@/utils/api";
+
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 // Get Single User
 export const getUserByEmail = async (email) => {
   try {
-    const res = await fetch(`${API}/user/${email}`, {
-      credentials: "include", // ✅ Better Auth Cookie
-    });
+    const res = await fetchWithAuth(`${API}/user/${email}`);
     return await res.json();
   } catch (error) {
     console.error("getUserByEmail error:", error);
@@ -17,9 +17,7 @@ export const getUserByEmail = async (email) => {
 // Get User Role
 export const getUserRole = async (email) => {
   try {
-    const res = await fetch(`${API}/user-role/${email}`, {
-      credentials: "include",
-    });
+    const res = await fetchWithAuth(`${API}/user-role/${email}`);
     return await res.json();
   } catch (error) {
     console.error("getUserRole error:", error);
@@ -30,9 +28,7 @@ export const getUserRole = async (email) => {
 // Get All Users (Admin)
 export const getAllUsers = async () => {
   try {
-    const res = await fetch(`${API}/users`, {
-      credentials: "include",
-    });
+    const res = await fetchWithAuth(`${API}/users`);
     return await res.json();
   } catch (error) {
     console.error("getAllUsers error:", error);
@@ -43,12 +39,8 @@ export const getAllUsers = async () => {
 // Update User Role (Admin)
 export const updateUserRole = async (id, role) => {
   try {
-    const res = await fetch(`${API}/users/role/${id}`, {
+    const res = await fetchWithAuth(`${API}/users/role/${id}`, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
       body: JSON.stringify({ role }),
     });
     return await res.json();
@@ -61,9 +53,7 @@ export const updateUserRole = async (id, role) => {
 // Get Dashboard Stats
 export const getDashboardStats = async () => {
   try {
-    const res = await fetch(`${API}/dashboard-stats`, {
-      credentials: "include",
-    });
+    const res = await fetchWithAuth(`${API}/dashboard-stats`);
     return await res.json();
   } catch (error) {
     console.error("getDashboardStats error:", error);

@@ -35,7 +35,11 @@ export default function OwnerDashboard() {
           getBookingRequests(session?.user?.email || ""),
         ]);
         setStats(statsData);
-        setBookings(bookingsData.slice(0, 3));
+        if (Array.isArray(bookingsData)) {
+          setBookings(bookingsData.slice(0, 3));
+        } else {
+          setBookings([]);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {

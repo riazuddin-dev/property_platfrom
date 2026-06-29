@@ -1,59 +1,57 @@
 // src/services/dashboardApi.js
+import { fetchWithAuth } from "@/utils/api";
+
 const API = process.env.NEXT_PUBLIC_API_URL;
 
+// Get dashboard stats based on user role
 export const getDashboardStats = async () => {
   try {
-    console.log("📡 Fetching dashboard stats...");
-    
-    const res = await fetch(`${API}/dashboard-stats`, {
-      credentials: "include", // ✅ IMPORTANT!
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    
-    console.log("📊 Dashboard stats response status:", res.status);
-    
-    if (!res.ok) {
-      const error = await res.json();
-      console.error("❌ Dashboard stats error:", error);
-      throw new Error(error.message);
-    }
-    
-    const data = await res.json();
-    console.log("✅ Dashboard stats:", data);
-    return data;
+    const res = await fetchWithAuth(`${API}/dashboard-stats`);
+    return await res.json();
   } catch (error) {
-    console.error("❌ getDashboardStats error:", error);
+    console.error("getDashboardStats error:", error);
     return null;
   }
 };
 
-// src/services/bookingApi.js
-export const getMyBookings = async () => {
+// Get admin dashboard stats
+export const getAdminStats = async () => {
   try {
-    console.log("📡 Fetching bookings...");
-    
-    const res = await fetch(`${API}/my-bookings`, {
-      credentials: "include", // ✅ IMPORTANT!
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    
-    console.log("📚 Bookings response status:", res.status);
-    
-    if (!res.ok) {
-      const error = await res.json();
-      console.error("❌ Bookings error:", error);
-      throw new Error(error.message);
+    const stats = await getDashboardStats();
+    if (stats?.role === "admin") {
+      return stats;
     }
-    
-    const data = await res.json();
-    console.log("✅ Bookings data:", Array.isArray(data) ? `${data.length} bookings` : data);
-    return data;
+    return null;
   } catch (error) {
-    console.error("❌ getMyBookings error:", error);
-    return [];
+    console.error("getAdminStats error:", error);
+    return null;
+  }
+};
+
+// Get owner dashboard stats
+export const getOwnerStats = async () => {
+  try {
+    const stats = await getDashboardStats();
+    if (stats?.role === "owner") {
+      return stats;
+    }
+    return null;
+  } catch (error) {
+    console.error("getOwnerStats error:", error);
+    return null;
+  }
+};
+
+// Get tenant dashboard stats
+export const getTenantStats = async () => {
+  try {
+    const stats = await getDashboardStats();
+    if (stats?.role === "tenant") {
+      return stats;
+    }
+    return null;
+  } catch (error) {
+    console.error("getTenantStats error:", error);
+    return null;
   }
 };

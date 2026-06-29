@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Star, Send, User, Calendar } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import Swal from "sweetalert2";
+import { fetchWithAuth } from "@/utils/api";
 
 export default function ReviewSection({ propertyId }) {
   const { data: session } = authClient.useSession();
@@ -20,7 +21,7 @@ export default function ReviewSection({ propertyId }) {
 
   const loadReviews = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/${propertyId}`);
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/reviews/${propertyId}`);
       const data = await res.json();
       setReviews(data);
     } catch (error) {
@@ -60,10 +61,8 @@ export default function ReviewSection({ propertyId }) {
 
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews`, {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/reviews`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({
           propertyId,
           rating,

@@ -12,6 +12,7 @@ import {
 import { authClient } from "@/lib/auth-client";
 import { getUserRole } from "@/services/userApi";
 import toast from "react-hot-toast";
+import { fetchWithAuth } from "@/utils/api";
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
@@ -52,9 +53,8 @@ export default function DashboardSidebar() {
       document.cookie = "better-auth.session_data=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       
       // Call backend logout
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/logout`, {
+      await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/logout`, {
         method: "POST",
-        credentials: "include",
       });
       
       toast.success("Logged out successfully!");

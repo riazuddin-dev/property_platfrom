@@ -1,12 +1,12 @@
 // src/services/bookingApi.js
+import { fetchWithAuth } from "@/utils/api";
+
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 // Get tenant's bookings
 export const getMyBookings = async () => {
   try {
-    const res = await fetch(`${API}/my-bookings`, {
-      credentials: "include",
-    });
+    const res = await fetchWithAuth(`${API}/my-bookings`);
     return await res.json();
   } catch (error) {
     console.error("getMyBookings error:", error);
@@ -17,9 +17,7 @@ export const getMyBookings = async () => {
 // Get owner's booking requests
 export const getBookingRequests = async (ownerEmail) => {
   try {
-    const res = await fetch(`${API}/booking-requests/${ownerEmail}`, {
-      credentials: "include",
-    });
+    const res = await fetchWithAuth(`${API}/booking-requests/${ownerEmail}`);
     return await res.json();
   } catch (error) {
     console.error("getBookingRequests error:", error);
@@ -30,12 +28,8 @@ export const getBookingRequests = async (ownerEmail) => {
 // Create new booking
 export const createBooking = async (bookingData) => {
   try {
-    const res = await fetch(`${API}/bookings`, {
+    const res = await fetchWithAuth(`${API}/bookings`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
       body: JSON.stringify(bookingData),
     });
     return await res.json();
@@ -48,12 +42,8 @@ export const createBooking = async (bookingData) => {
 // Update booking status (Owner only)
 export const updateBookingStatus = async (id, status) => {
   try {
-    const res = await fetch(`${API}/booking-status/${id}`, {
+    const res = await fetchWithAuth(`${API}/booking-status/${id}`, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
       body: JSON.stringify({ status }),
     });
     return await res.json();
@@ -66,9 +56,7 @@ export const updateBookingStatus = async (id, status) => {
 // Get all bookings (Admin only)
 export const getAllBookings = async () => {
   try {
-    const res = await fetch(`${API}/all-bookings`, {
-      credentials: "include",
-    });
+    const res = await fetchWithAuth(`${API}/all-bookings`);
     return await res.json();
   } catch (error) {
     console.error("getAllBookings error:", error);
@@ -79,9 +67,7 @@ export const getAllBookings = async () => {
 // Get single booking by ID
 export const getBookingById = async (id) => {
   try {
-    const res = await fetch(`${API}/bookings/${id}`, {
-      credentials: "include",
-    });
+    const res = await fetchWithAuth(`${API}/bookings/${id}`);
     return await res.json();
   } catch (error) {
     console.error("getBookingById error:", error);

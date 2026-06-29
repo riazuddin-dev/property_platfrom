@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, Home } from "lucide-react";
 import Link from "next/link";
+import { fetchWithAuth } from "@/utils/api";
 
 export default function MyBookingsPage() {
   const [bookings, setBookings] = useState([]);
@@ -12,11 +13,13 @@ export default function MyBookingsPage() {
   useEffect(() => {
     const loadBookings = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/my-bookings`, {
-          credentials: "include",
-        });
+        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/my-bookings`);
         const data = await res.json();
-        setBookings(data);
+        if (Array.isArray(data)) {
+          setBookings(data);
+        } else {
+          setBookings([]);
+        }
       } catch (error) {
         console.error("Error loading bookings:", error);
       } finally {
@@ -136,7 +139,7 @@ export default function MyBookingsPage() {
                   
                   {booking.status === "approved" && (
                     <Link
-                      href={`/property/${booking.propertyId}`}
+                      href={`/properties/${booking.propertyId}`}
                       className="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-xl font-semibold transition"
                     >
                       View Property

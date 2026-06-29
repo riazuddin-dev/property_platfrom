@@ -138,11 +138,11 @@ export default function FavoritesPage() {
                 transition={{ delay: index * 0.1 }}
                 className="bg-white dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden hover:shadow-xl hover:border-teal-500/30 transition-all duration-300 group"
               >
-                {/* Property Image */}
+                 {/* Property Image */}
                 <div className="relative h-48 overflow-hidden">
                   <img
-                    src={favorite.propertyId?.image || favorite.propertyId?.propertyImage || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400"}
-                    alt={favorite.propertyId?.title || favorite.propertyId?.propertyTitle}
+                    src={favorite.propertyImage || favorite.propertyId?.image || favorite.propertyId?.propertyImage || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400"}
+                    alt={favorite.propertyTitle || favorite.propertyId?.title || favorite.propertyId?.propertyTitle || "Property"}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute top-4 right-4">
@@ -159,32 +159,32 @@ export default function FavoritesPage() {
                 {/* Property Details */}
                 <div className="p-5">
                   <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 line-clamp-2">
-                    {favorite.propertyId?.title || favorite.propertyId?.propertyTitle}
+                    {favorite.propertyTitle || favorite.propertyId?.title || favorite.propertyId?.propertyTitle || "Untitled Property"}
                   </h3>
                   
                   <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mb-4">
                     <MapPin size={16} />
-                    <span className="text-sm">{favorite.propertyId?.location}</span>
+                    <span className="text-sm">{favorite.location || favorite.propertyId?.location || "Unknown Location"}</span>
                   </div>
 
                   <div className="flex items-center gap-4 mb-4 text-sm text-slate-600 dark:text-slate-400">
                     <div className="flex items-center gap-1">
                       <Bed size={16} />
-                      <span>{favorite.propertyId?.bedrooms || 'N/A'} Beds</span>
+                      <span>{favorite.bedrooms ?? favorite.propertyId?.bedrooms ?? 'N/A'} Beds</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Bath size={16} />
-                      <span>{favorite.propertyId?.bathrooms || 'N/A'} Baths</span>
+                      <span>{favorite.bathrooms ?? favorite.propertyId?.bathrooms ?? 'N/A'} Baths</span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-white/10">
                     <p className="text-2xl font-bold text-teal-500">
-                      ৳{favorite.propertyId?.rent?.toLocaleString() || 'N/A'}
+                      ৳{(favorite.rent ?? favorite.propertyId?.rent)?.toLocaleString() || 'N/A'}
                       <span className="text-sm text-slate-500 font-normal">/month</span>
                     </p>
                     <Link
-                      href={`/property/${favorite.propertyId?._id}`}
+                      href={`/properties/${favorite.propertyId?._id || favorite.propertyId}`}
                       className="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-xl font-semibold text-sm transition"
                     >
                       View Details

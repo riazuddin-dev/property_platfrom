@@ -1,15 +1,16 @@
-// src/lib/auth-client.js
+// src/lib/auth-client.ts
 import { createAuthClient } from "better-auth/react";
 
 export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000",
-  
-  fetchOptions: {
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  },
+  baseURL: 
+    process.env.NEXT_PUBLIC_BETTER_AUTH_URL || 
+    process.env.BETTER_AUTH_URL || 
+    "http://localhost:3000",
 });
 
-export const { signIn, signUp, signOut, useSession } = authClient;
+export const {
+  signIn,
+  signUp,
+  signOut,
+  useSession,
+} = authClient;

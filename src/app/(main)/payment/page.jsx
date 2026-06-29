@@ -9,6 +9,7 @@ import Swal from "sweetalert2";
 import { motion } from "framer-motion";
 import { authClient } from "@/lib/auth-client";
 import { useState, useEffect } from "react";
+import { fetchWithAuth } from "@/utils/api";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
@@ -46,10 +47,8 @@ function StripePaymentForm({ bookingData, onSuccess }) {
 
     try {
       // 1️ Create Payment Intent
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/create-payment-intent`, {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/create-payment-intent`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({ amount: bookingData.amount }),
       });
 
@@ -70,10 +69,8 @@ function StripePaymentForm({ bookingData, onSuccess }) {
         });
       } else if (result.paymentIntent.status === "succeeded") {
         // 3️⃣ Create Booking
-        const bookingRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/bookings`, {
+        const bookingRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/bookings`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
           body: JSON.stringify({
             ...bookingData,
             status: "pending",
@@ -87,10 +84,8 @@ function StripePaymentForm({ bookingData, onSuccess }) {
 
         if (bookingRes.ok) {
           // 4️⃣ Save Transaction
-          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions`, {
+          await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/transactions`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
             body: JSON.stringify({
               bookingId: bookingResult.insertedId,
               propertyId: bookingData.propertyId,

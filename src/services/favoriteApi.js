@@ -1,12 +1,12 @@
 // src/services/favoriteApi.js
+import { fetchWithAuth } from "@/utils/api";
+
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 // Get user's favorites
 export const getFavorites = async () => {
   try {
-    const res = await fetch(`${API}/favorites`, {
-      credentials: "include",
-    });
+    const res = await fetchWithAuth(`${API}/favorites`);
     return await res.json();
   } catch (error) {
     console.error("getFavorites error:", error);
@@ -17,12 +17,8 @@ export const getFavorites = async () => {
 // Add to favorites
 export const addToFavorites = async (propertyId) => {
   try {
-    const res = await fetch(`${API}/favorites`, {
+    const res = await fetchWithAuth(`${API}/favorites`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
       body: JSON.stringify({ propertyId }),
     });
     return await res.json();
@@ -35,9 +31,8 @@ export const addToFavorites = async (propertyId) => {
 // Remove from favorites
 export const removeFromFavorites = async (id) => {
   try {
-    const res = await fetch(`${API}/favorites/${id}`, {
+    const res = await fetchWithAuth(`${API}/favorites/${id}`, {
       method: "DELETE",
-      credentials: "include",
     });
     return await res.json();
   } catch (error) {

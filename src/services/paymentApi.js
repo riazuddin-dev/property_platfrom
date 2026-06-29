@@ -1,15 +1,13 @@
 // src/services/paymentApi.js
+import { fetchWithAuth } from "@/utils/api";
+
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 // Create Stripe payment intent
 export const createPaymentIntent = async (amount) => {
   try {
-    const res = await fetch(`${API}/create-payment-intent`, {
+    const res = await fetchWithAuth(`${API}/create-payment-intent`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
       body: JSON.stringify({ amount }),
     });
     return await res.json();
@@ -22,12 +20,8 @@ export const createPaymentIntent = async (amount) => {
 // Save transaction
 export const saveTransaction = async (transactionData) => {
   try {
-    const res = await fetch(`${API}/transactions`, {
+    const res = await fetchWithAuth(`${API}/transactions`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
       body: JSON.stringify(transactionData),
     });
     return await res.json();
@@ -40,9 +34,7 @@ export const saveTransaction = async (transactionData) => {
 // Get transactions
 export const getTransactions = async () => {
   try {
-    const res = await fetch(`${API}/transactions`, {
-      credentials: "include",
-    });
+    const res = await fetchWithAuth(`${API}/transactions`);
     return await res.json();
   } catch (error) {
     console.error("getTransactions error:", error);

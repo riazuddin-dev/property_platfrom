@@ -1,3 +1,4 @@
+// src/lib/auth.js
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { MongoClient } from "mongodb";
@@ -8,7 +9,7 @@ const db = client.db("staysphere");
 export const auth = betterAuth({
   database: mongodbAdapter(db, {
     client,
-    createCollections: true, // ✅ Auto-create collections (sessions, user, etc.)
+    createCollections: true,
   }),
 
   emailAndPassword: {
@@ -24,18 +25,18 @@ export const auth = betterAuth({
   },
 
   session: {
-    expiresIn: 60 * 60 * 24 * 30, // 30 days
-    updateAge: 60 * 60 * 24, // Refresh every 24 hours
+    expiresIn: 60 * 60 * 24 * 30,
+    updateAge: 60 * 60 * 24,
     cookieCache: {
       enabled: true,
-      expires: 60 * 60 * 24 * 7, // 7 days
+      expires: 60 * 60 * 24 * 7,
     },
   },
 
   advanced: {
     cookiePrefix: "better-auth",
     defaultCookieAttributes: {
-      httpOnly: true,
+      httpOnly: false,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",

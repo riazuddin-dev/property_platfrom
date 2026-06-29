@@ -14,23 +14,29 @@ import toast from "react-hot-toast";
 export default function LoginPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  // ✅ সঠিকভাবে useSession ব্যবহার করুন
   const { data: session, isPending } = authClient.useSession();
   const { register, handleSubmit, formState: { isSubmitting } } = useForm();
 
+  // ✅ ইতিমধ্যে লগইন করা থাকলে রিডাইরেক্ট
   useEffect(() => {
     if (!isPending && session?.user) {
-      toast.success("Already logged in! Redirecting to home...");
-      router.replace("/"); // ✅ Home page এ redirect
+      toast.success("Already logged in!");
+      router.replace("/");
     }
   }, [session, isPending, router]);
 
   const onSubmit = async (data) => {
     try {
+      setLoading(true);
       console.log("🔐 Attempting login for:", data.email);
 
       const result = await authClient.signIn.email({
         email: data.email,
         password: data.password,
+        callbackURL: "/", // ✅ Home page এ redirect
       });
 
       console.log("📋 Login result:", result);
@@ -38,24 +44,28 @@ export default function LoginPage() {
       if (result?.error) {
         console.error("❌ Login error:", result.error);
         toast.error(result.error.message || "Invalid credentials");
+        setLoading(false);
         return;
       }
 
       console.log("✅ Login successful!");
       toast.success("Welcome back! 🎉");
       
+      // ✅ সফল লগইনের পর হোম পেজে রিডাইরেক্ট
       setTimeout(() => {
-        router.replace("/"); // ✅ Home page এ redirect
+        router.push("/");
       }, 500);
 
     } catch (error) {
       console.error("❌ Login error:", error);
-      toast.error("Something went wrong. Please try again.");
+      toast.error(error?.message || "Something went wrong. Please try again.");
+      setLoading(false);
     }
   };
 
   const handleGoogle = async () => {
     try {
+      setLoading(true);
       await authClient.signIn.social({
         provider: "google",
         callbackURL: "/", // ✅ Home page এ redirect
@@ -63,9 +73,11 @@ export default function LoginPage() {
     } catch (error) {
       console.error("Google login error:", error);
       toast.error("Google login failed");
+      setLoading(false);
     }
   };
 
+  // ✅ লোডিং স্টেট
   if (isPending) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
@@ -223,10 +235,10 @@ export default function LoginPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || loading}
               className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white py-4 rounded-2xl font-semibold text-lg transition-all disabled:opacity-70 shadow-lg shadow-teal-500/30 flex items-center justify-center gap-2 group"
             >
-              {isSubmitting ? (
+              {isSubmitting || loading ? (
                 <>
                   <Loader2 size={20} className="animate-spin" />
                   Signing in...
@@ -252,12 +264,19 @@ export default function LoginPage() {
               whileTap={{ scale: 0.98 }}
               type="button"
               onClick={handleGoogle}
-              className="w-full border border-white/10 py-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-slate-900/50 transition-all bg-slate-900/30 backdrop-blur-xl"
+              disabled={loading}
+              className="w-full border border-white/10 py-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-slate-900/50 transition-all bg-slate-900/30 backdrop-blur-xl disabled:opacity-70"
             >
-              <FcGoogle size={24} />
-              <span className="font-medium text-white">
-                Continue with Google
-              </span>
+              {loading ? (
+                <Loader2 size={24} className="animate-spin text-white" />
+              ) : (
+                <>
+                  <FcGoogle size={24} />
+                  <span className="font-medium text-white">
+                    Continue with Google
+                  </span>
+                </>
+              )}
             </motion.button>
           </motion.form>
 

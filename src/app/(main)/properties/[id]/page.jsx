@@ -13,6 +13,7 @@ import { authClient } from "@/lib/auth-client";
 import Swal from "sweetalert2";
 import BookingModal from "@/components/shared/booking/BookingModel";
 import ReviewSection from "@/components/shared/review/ReviewSection";
+import { fetchWithAuth } from "@/utils/api";
 
 export default function PropertyDetailsPage() {
   const params = useParams();
@@ -34,9 +35,7 @@ export default function PropertyDetailsPage() {
         
         // Check if already favorited
         if (session?.user?.email) {
-          const favoritesRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/favorites`, {
-            credentials: "include"
-          });
+          const favoritesRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/favorites`);
           const favorites = await favoritesRes.json();
           const isFav = favorites.some(f => f.propertyId === params.id);
           setIsFavorite(isFav);
@@ -70,16 +69,13 @@ export default function PropertyDetailsPage() {
     try {
       if (isFavorite) {
         // Remove from favorites
-        const favoritesRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/favorites`, {
-          credentials: "include"
-        });
+        const favoritesRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/favorites`);
         const favorites = await favoritesRes.json();
         const fav = favorites.find(f => f.propertyId === params.id);
         
         if (fav) {
-          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/favorites/${fav._id}`, {
+          await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/favorites/${fav._id}`, {
             method: "DELETE",
-            credentials: "include"
           });
         }
         
@@ -92,10 +88,8 @@ export default function PropertyDetailsPage() {
         });
       } else {
         // Add to favorites
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/favorites`, {
+        await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/favorites`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
           body: JSON.stringify({
             propertyId: property._id,
             propertyTitle: property.title,
@@ -122,6 +116,30 @@ export default function PropertyDetailsPage() {
         title: "Error",
         text: "Failed to update favorites"
       });
+    }
+  };
+
+  const handleShare = () => {
+    if (typeof window !== "undefined") {
+      const shareUrl = window.location.href;
+      navigator.clipboard.writeText(shareUrl)
+        .then(() => {
+          Swal.fire({
+            icon: "success",
+            title: "Link Copied! 🔗",
+            text: "Property listing URL copied to clipboard",
+            timer: 1500,
+            showConfirmButton: false,
+          });
+        })
+        .catch((err) => {
+          console.error("Failed to copy link:", err);
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "Failed to copy link to clipboard",
+          });
+        });
     }
   };
 
@@ -276,9 +294,18 @@ export default function PropertyDetailsPage() {
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h1 className="text-4xl font-bold text-white mb-3">{property.title}</h1>
-                  <div className="flex items-center gap-2 text-slate-400">
-                    <MapPin size={18} className="text-teal-400" />
-                    <span>{property.location}</span>
+                  <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex items-center gap-2 text-slate-400">
+                      <MapPin size={18} className="text-teal-400" />
+                      <span>{property.location}</span>
+                    </div>
+                    <button
+                      onClick={handleShare}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition border border-white/5"
+                    >
+                      <Share2 size={14} className="text-teal-400" />
+                      Share Listing
+                    </button>
                   </div>
                 </div>
                 <div className="text-right">

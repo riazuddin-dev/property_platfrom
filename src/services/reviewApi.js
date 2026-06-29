@@ -1,15 +1,13 @@
 // src/services/reviewApi.js
+import { fetchWithAuth } from "@/utils/api";
+
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 // Add new review
 export const addReview = async (reviewData) => {
   try {
-    const res = await fetch(`${API}/reviews`, {
+    const res = await fetchWithAuth(`${API}/reviews`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
       body: JSON.stringify(reviewData),
     });
     return await res.json();
@@ -22,9 +20,7 @@ export const addReview = async (reviewData) => {
 // Get property reviews (Public)
 export const getPropertyReviews = async (propertyId) => {
   try {
-    const res = await fetch(`${API}/reviews/${propertyId}`, {
-      credentials: "include",
-    });
+    const res = await fetchWithAuth(`${API}/reviews/${propertyId}`);
     return await res.json();
   } catch (error) {
     console.error("getPropertyReviews error:", error);
