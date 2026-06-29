@@ -1,6 +1,7 @@
+// src/app/payment/page.jsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
@@ -9,6 +10,18 @@ import { motion } from "framer-motion";
 import { authClient } from "@/lib/auth-client";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+
+// ✅ Loading fallback component
+function PaymentLoading() {
+  return (
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-slate-400">Loading payment...</p>
+      </div>
+    </div>
+  );
+}
 
 function PaymentForm() {
   const router = useRouter();
@@ -22,8 +35,6 @@ function PaymentForm() {
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  // ✅ Role check সরিয়ে ফেলা হয়েছে - Property Details page এ already check আছে
 
   const bookingData = {
     propertyId: searchParams.get("propertyId"),
@@ -147,13 +158,9 @@ function PaymentForm() {
                 base: {
                   fontSize: "16px",
                   color: "#ffffff",
-                  "::placeholder": {
-                    color: "#94a3b8",
-                  },
+                  "::placeholder": { color: "#94a3b8" },
                 },
-                invalid: {
-                  color: "#ef4444",
-                },
+                invalid: { color: "#ef4444" },
               },
             }}
           />
@@ -176,11 +183,7 @@ function PaymentForm() {
       </button>
 
       <p className="text-xs text-slate-400 text-center flex items-center justify-center gap-1">
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-        Secure payment powered by Stripe
+        🔒 Secure payment powered by Stripe
       </p>
     </form>
   );
@@ -197,14 +200,7 @@ export default function PaymentPage() {
   }, []);
 
   if (!mounted) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-400">Loading payment...</p>
-        </div>
-      </div>
-    );
+    return <PaymentLoading />;
   }
 
   return (
@@ -229,12 +225,7 @@ export default function PaymentPage() {
           transition={{ delay: 0.1 }}
           className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-8 mb-8"
         >
-          <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-            <span className="w-8 h-8 bg-teal-500/20 rounded-lg flex items-center justify-center">
-              📋
-            </span>
-            Booking Summary
-          </h2>
+          <h2 className="text-2xl font-bold text-white mb-6">📋 Booking Summary</h2>
           <div className="space-y-4 divide-y divide-white/5">
             <div className="flex justify-between items-center pt-4">
               <div>
@@ -269,12 +260,7 @@ export default function PaymentPage() {
           transition={{ delay: 0.2 }}
           className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-3xl p-8"
         >
-          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <span className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
-              💳
-            </span>
-            Payment Details
-          </h3>
+          <h3 className="text-xl font-bold text-white mb-6">💳 Payment Details</h3>
           <Elements stripe={stripePromise}>
             <PaymentForm />
           </Elements>
@@ -287,11 +273,7 @@ export default function PaymentPage() {
           className="mt-6 text-center"
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-sm">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Your payment information is encrypted and secure
+            🔒 Your payment information is encrypted and secure
           </div>
         </motion.div>
       </div>
