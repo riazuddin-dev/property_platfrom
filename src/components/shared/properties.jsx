@@ -1,11 +1,10 @@
-// src/components/shared/properties.jsx
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Search, SlidersHorizontal, Heart, MapPin, BedDouble, Bath, 
+  Search, Heart, MapPin, BedDouble, Bath, 
   X, Sparkles, Home, Building2, Castle, ArrowRight, Filter
 } from "lucide-react";
 import { getAllProperties } from "@/services/propertyApi";
@@ -50,18 +49,15 @@ export default function PropertiesPage() {
       try {
         setLoading(true);
         
-        // Build query params for backend filtering
-        const params = new URLSearchParams();
-        params.append("page", page);
-        params.append("limit", "6");
+        // ✅ Correct API call with proper parameters
+        const result = await getAllProperties(page, 6, {
+          search,
+          propertyType,
+          minPrice: minPrice || 0,
+          maxPrice: maxPrice || 999999,
+          sort: sortOrder || "default",
+        });
         
-        if (search) params.append("search", search);
-        if (propertyType) params.append("type", propertyType);
-        if (minPrice) params.append("minPrice", minPrice);
-        if (maxPrice) params.append("maxPrice", maxPrice);
-        if (sortOrder) params.append("sort", sortOrder);
-
-        const result = await getAllProperties(params.toString());
         setProperties(result.properties || []);
         setTotalPages(result.totalPages || 1);
         setTotalProperties(result.total || 0);
@@ -376,9 +372,9 @@ export default function PropertiesPage() {
                     </div>
                   </div>
 
-                  {/* View Details Button */}
+                  {/* View Details Button - ✅ Fixed path */}
                   <Link
-                    href={`/properties/${property._id}`}
+                    href={`/property/${property._id}`}
                     className="flex items-center justify-center gap-2 w-full py-4 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white rounded-2xl font-semibold transition-all shadow-lg shadow-teal-500/20 group/btn"
                   >
                     View Details
