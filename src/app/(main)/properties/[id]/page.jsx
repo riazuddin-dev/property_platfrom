@@ -25,6 +25,8 @@ export default function PropertyDetailsPage() {
   
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
@@ -32,33 +34,48 @@ export default function PropertyDetailsPage() {
   const [applied, setApplied] = useState(false);
 
   useEffect(() => {
+    if (!params.id) return;
+
+    let cancelled = false;
+
     const loadProperty = async () => {
       try {
         setLoading(true);
+        setLoadError(false);
         const data = await getPropertyById(params.id);
-        setProperty(data);
-        
+        if (cancelled) return;
+        setProperty(data || null);
+
         // Check if already favorited
-        if (session?.user?.email) {
-          const favoritesRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/favorites`);
-          const favorites = await favoritesRes.json();
-          const isFav = favorites.some(f => f.propertyId === params.id);
-          setIsFavorite(isFav);
+        if (session?.user?.email && data) {
+          try {
+            const favoritesRes = await fetchWithAuth(
+              `${process.env.NEXT_PUBLIC_API_URL}/favorites`
+            );
+            const favorites = await favoritesRes.json();
+            if (!cancelled && Array.isArray(favorites)) {
+              setIsFavorite(favorites.some((f) => f.propertyId === params.id));
+            }
+          } catch {
+            // favorites optional — do not fail the whole page
+          }
         }
       } catch (error) {
         console.error("Error loading property:", error);
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "Failed to load property details"
-        });
+        if (!cancelled) {
+          setProperty(null);
+          setLoadError(true);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
-    if (params.id) loadProperty();
-  }, [params.id, session]);
+    loadProperty();
+    return () => {
+      cancelled = true;
+    };
+  }, [params.id, session, reloadKey]);
 
   useEffect(() => {
     const loadRole = async () => {
@@ -186,13 +203,49 @@ export default function PropertyDetailsPage() {
     );
   }
 
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <AlertCircle className="text-rose-400 mx-auto mb-4" size={64} />
+          <h2 className="text-2xl font-bold text-white mb-2">
+            Could not load property
+          </h2>
+          <p className="text-slate-400 mb-6 text-sm">
+            Check your connection or that the API is running, then try again.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => setReloadKey((k) => k + 1)}
+              className="px-6 py-3 rounded-xl border border-white/10 bg-white/5 text-white font-semibold hover:border-teal-500/40 transition"
+            >
+              Retry
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push("/properties")}
+              className="px-6 py-3 bg-teal-500 text-white rounded-xl font-semibold"
+            >
+              Browse Properties
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!property) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
           <AlertCircle className="text-red-500 mx-auto mb-4" size={64} />
           <h2 className="text-2xl font-bold text-white mb-2">Property Not Found</h2>
+          <p className="text-slate-400 mb-6 text-sm">
+            This listing may have been removed or the link is incorrect.
+          </p>
           <button
+            type="button"
             onClick={() => router.push("/properties")}
             className="px-6 py-3 bg-teal-500 text-white rounded-xl font-semibold"
           >
