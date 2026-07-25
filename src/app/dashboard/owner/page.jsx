@@ -16,6 +16,8 @@ export default function OwnerDashboard() {
   const [stats, setStats] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   // Demo chart data (replace with real API data)
   const chartData = [
@@ -28,29 +30,42 @@ export default function OwnerDashboard() {
   ];
 
   useEffect(() => {
+    if (!session?.user?.email) return;
+
+    let cancelled = false;
+
     const fetchData = async () => {
+      setLoading(true);
+      setError("");
       try {
         const [statsData, bookingsData] = await Promise.all([
           getDashboardStats(),
-          getBookingRequests(session?.user?.email || ""),
+          getBookingRequests(session.user.email),
         ]);
+        if (cancelled) return;
         setStats(statsData);
         if (Array.isArray(bookingsData)) {
           setBookings(bookingsData.slice(0, 3));
         } else {
           setBookings([]);
         }
-      } catch (error) {
-        console.error("Error fetching data:", error);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        if (!cancelled) {
+          setError("Could not load owner dashboard. Check your connection and try again.");
+          setStats(null);
+          setBookings([]);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
-    if (session?.user?.email) {
-      fetchData();
-    }
-  }, [session]);
+    fetchData();
+    return () => {
+      cancelled = true;
+    };
+  }, [session, reloadKey]);
 
   const statCards = [
     { title: "Total Earnings", value: `৳${stats?.totalEarnings?.toLocaleString() || 0}`, icon: DollarSign, color: "text-emerald-400", bg: "bg-emerald-500/10" },
@@ -78,6 +93,19 @@ export default function OwnerDashboard() {
           Welcome back, <span className="text-teal-500 font-semibold">{session?.user?.name}</span>. Here is your business overview.
         </p>
       </motion.div>
+
+      {error && (
+        <div className="flex flex-col gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-rose-300">{error}</p>
+          <button
+            type="button"
+            onClick={() => setReloadKey((k) => k + 1)}
+            className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-teal-500/40 hover:bg-teal-500/10"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
