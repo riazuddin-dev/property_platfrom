@@ -31,6 +31,8 @@ const PropertyCardSkeleton = () => (
 export default function PropertiesPage() {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalProperties, setTotalProperties] = useState(0);
@@ -45,11 +47,13 @@ export default function PropertiesPage() {
 
   // Load properties with backend filtering
   useEffect(() => {
+    let cancelled = false;
+
     const loadProperties = async () => {
       try {
         setLoading(true);
-        
-        // ✅ Correct API call with proper parameters
+        setError("");
+
         const result = await getAllProperties(page, 6, {
           search,
           propertyType,
@@ -57,17 +61,21 @@ export default function PropertiesPage() {
           maxPrice: maxPrice || 999999,
           sort: sortOrder || "default",
         });
-        
+
+        if (cancelled) return;
         setProperties(result.properties || []);
         setTotalPages(result.totalPages || 1);
         setTotalProperties(result.total || 0);
-      } catch (error) {
-        console.error("Error loading properties:", error);
-        setProperties([]);
-        setTotalPages(1);
-        setTotalProperties(0);
+      } catch (err) {
+        console.error("Error loading properties:", err);
+        if (!cancelled) {
+          setError("Could not load properties. Check that the API is running, then try again.");
+          setProperties([]);
+          setTotalPages(1);
+          setTotalProperties(0);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
@@ -76,8 +84,11 @@ export default function PropertiesPage() {
       loadProperties();
     }, search ? 500 : 0);
 
-    return () => clearTimeout(timer);
-  }, [page, search, propertyType, minPrice, maxPrice, sortOrder]);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [page, search, propertyType, minPrice, maxPrice, sortOrder, reloadKey]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -257,7 +268,7 @@ export default function PropertiesPage() {
         </motion.div>
 
         {/* Results Count */}
-        {!loading && (
+        {!loading && !error && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -277,6 +288,21 @@ export default function PropertiesPage() {
               <PropertyCardSkeleton key={i} />
             ))}
           </div>
+        ) : error ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-16 bg-slate-900/30 backdrop-blur-xl border border-rose-500/20 rounded-3xl px-6"
+          >
+            <p className="text-rose-300 mb-6">{error}</p>
+            <button
+              type="button"
+              onClick={() => setReloadKey((k) => k + 1)}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500/15 border border-teal-500/30 text-teal-300 font-semibold hover:bg-teal-500/25 transition"
+            >
+              Retry
+            </button>
+          </motion.div>
         ) : properties.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
