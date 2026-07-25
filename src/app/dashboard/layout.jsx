@@ -20,7 +20,11 @@ export default function DashboardLayout({ children }) {
     if (isPending) return;
 
     if (!session?.user) {
-      router.replace("/login");
+      const next =
+        pathname && pathname.startsWith("/dashboard")
+          ? `?next=${encodeURIComponent(pathname)}`
+          : "";
+      router.replace(`/login${next}`);
       return;
     }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { motion } from "framer-motion";
 import {
   Mail,
@@ -19,11 +19,20 @@ import {
 import { FcGoogle } from "react-icons/fc";
 import { useForm } from "react-hook-form";
 import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 
-export default function LoginPage() {
+/** Only allow same-app relative dashboard paths (no open redirects). */
+function safeNextPath(raw) {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/dashboard";
+  if (!raw.startsWith("/dashboard")) return "/dashboard";
+  return raw;
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const afterLogin = safeNextPath(searchParams.get("next"));
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { data: session, isPending } = authClient.useSession();
@@ -39,9 +48,9 @@ export default function LoginPage() {
   useEffect(() => {
     if (!isPending && session?.user) {
       toast.success("Already logged in");
-      router.replace("/dashboard");
+      router.replace(afterLogin);
     }
-  }, [session, isPending, router]);
+  }, [session, isPending, router, afterLogin]);
 
   const onSubmit = async (data) => {
     try {
@@ -50,7 +59,7 @@ export default function LoginPage() {
       const result = await authClient.signIn.email({
         email: data.email.trim(),
         password: data.password,
-        callbackURL: "/dashboard",
+        callbackURL: afterLogin,
       });
 
       if (result?.error) {
@@ -59,7 +68,7 @@ export default function LoginPage() {
       }
 
       toast.success("Welcome back!");
-      router.push("/dashboard");
+      router.push(afterLogin);
     } catch (error) {
       toast.error(error?.message || "Something went wrong. Please try again.");
     } finally {
@@ -72,7 +81,7 @@ export default function LoginPage() {
       setLoading(true);
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/dashboard",
+        callbackURL: afterLogin,
       });
     } catch {
       toast.error("Google login failed");
@@ -329,5 +338,19 @@ export default function LoginPage() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-slate-950">
+          <Loader2 className="w-12 h-12 text-teal-500 animate-spin" />
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }
