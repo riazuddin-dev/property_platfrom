@@ -22,17 +22,28 @@ import { authClient } from "@/lib/auth-client";
 import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 
-/** Only allow same-app relative dashboard paths (no open redirects). */
+/** Only allow same-app relative paths (no open redirects). */
 function safeNextPath(raw) {
   if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/dashboard";
-  if (!raw.startsWith("/dashboard")) return "/dashboard";
-  return raw;
+  // After login, allow returning to dashboard tools or property pages
+  if (
+    raw.startsWith("/dashboard") ||
+    raw.startsWith("/properties") ||
+    raw === "/contact" ||
+    raw === "/about"
+  ) {
+    return raw;
+  }
+  return "/dashboard";
 }
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const afterLogin = safeNextPath(searchParams.get("next"));
+  // Support both ?next= and legacy ?redirect=
+  const afterLogin = safeNextPath(
+    searchParams.get("next") || searchParams.get("redirect")
+  );
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { data: session, isPending } = authClient.useSession();

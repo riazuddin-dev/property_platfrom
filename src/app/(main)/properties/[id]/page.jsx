@@ -79,7 +79,9 @@ export default function PropertyDetailsPage() {
   const handleFavoriteToggle = async () => {
     if (!session?.user) {
       toast.error("Please login to save favorites");
-      router.push("/login");
+      router.push(
+        `/login?next=${encodeURIComponent(`/properties/${params.id}`)}`
+      );
       return;
     }
 
@@ -149,7 +151,7 @@ export default function PropertyDetailsPage() {
   const handleBookNow = () => {
     if (!session?.user) {
       toast.error("Please login to apply for this property");
-      router.push(`/login?redirect=/properties/${params.id}`);
+      router.push(`/login?next=${encodeURIComponent(`/properties/${params.id}`)}`);
       return;
     }
 
