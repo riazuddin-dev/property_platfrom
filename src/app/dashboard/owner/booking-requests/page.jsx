@@ -18,27 +18,45 @@ export default function BookingRequests() {
   const { data: session } = authClient.useSession();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
+    if (!session?.user?.email) return;
+
+    let cancelled = false;
+
     const loadRequests = async () => {
-      if (!session?.user?.email) return;
+      setLoading(true);
+      setError("");
       try {
         const data = await getBookingRequests(session.user.email);
+        if (cancelled) return;
         const list = Array.isArray(data) ? data : [];
         setBookings(list);
         if (list.length) setSelected(list[0]);
-      } catch (error) {
-        console.error("Failed to load booking requests:", error);
-        toast.error("Failed to load applications");
+        else setSelected(null);
+      } catch (err) {
+        console.error("Failed to load booking requests:", err);
+        if (!cancelled) {
+          setError("Could not load applications. Check your connection and try again.");
+          setBookings([]);
+          setSelected(null);
+          toast.error("Failed to load applications");
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
+
     loadRequests();
-  }, [session]);
+    return () => {
+      cancelled = true;
+    };
+  }, [session, reloadKey]);
 
   const filtered = useMemo(() => {
     return bookings.filter((b) => {
@@ -78,6 +96,18 @@ export default function BookingRequests() {
 
   return (
     <div className="space-y-6 p-6 md:p-8">
+      {error && (
+        <div className="flex flex-col gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-rose-300">{error}</p>
+          <button
+            type="button"
+            onClick={() => setReloadKey((k) => k + 1)}
+            className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-teal-500/40 hover:bg-teal-500/10"
+          >
+            Retry
+          </button>
+        </div>
+      )}
       <div>
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white md:text-4xl">
           Applications
