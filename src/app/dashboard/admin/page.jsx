@@ -17,6 +17,8 @@ export default function AdminDashboard() {
   const { data: session } = authClient.useSession();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   const recentActivities = [
     { id: 1, action: "New user registered", user: "sarah@example.com", time: "2 mins ago", icon: UserPlus, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
@@ -26,19 +28,31 @@ export default function AdminDashboard() {
   ];
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchStats = async () => {
+      setLoading(true);
+      setError("");
       try {
         const data = await getDashboardStats();
+        if (cancelled) return;
         setStats(data);
-      } catch (error) {
-        console.error("Error fetching stats:", error);
+      } catch (err) {
+        console.error("Error fetching stats:", err);
+        if (!cancelled) {
+          setError("Could not load admin stats. Check your connection and try again.");
+          setStats(null);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchStats();
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadKey]);
 
   const statCards = [
     { 
@@ -119,6 +133,19 @@ export default function AdminDashboard() {
             </button>
           </div>
         </motion.div>
+
+        {error && (
+          <div className="flex flex-col gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-rose-600 dark:text-rose-300">{error}</p>
+            <button
+              type="button"
+              onClick={() => setReloadKey((k) => k + 1)}
+              className="shrink-0 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-4 py-2 text-sm font-semibold text-slate-900 dark:text-white transition hover:border-teal-500/40 hover:bg-teal-500/10"
+            >
+              Retry
+            </button>
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
