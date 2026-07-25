@@ -64,28 +64,52 @@ The main purpose of StaySphere is to streamline the property renting process, el
 
 ## 🛠️ Local Development Setup
 
-1. **Clone the repository:**
-   ```bash
-   git clone <client-repo-url> client
-   git clone <server-repo-url> server
-   ```
+### Paths on this machine
 
-2. **Configure Environment Variables:**
-   Create a `.env` file in the client directory:
-   ```env
-   BETTER_AUTH_SECRET=<secret-key>
-   BETTER_AUTH_URL=http://localhost:3000
-   NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
-   MONGO_DB=<mongodb-uri>
-   GOOGLE_CLIENT_ID=<google-id>
-   GOOGLE_CLIENT_SECRET=<google-secret>
-   NEXT_PUBLIC_API_URL=http://localhost:5000
-   NEXT_PUBLIC_IMGBB_API_KEY=<imgbb-key>
-   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=<stripe-pub-key>
-   ```
+```powershell
+cd "D:\Assingmant\assinment -10\clinet\property_platfrom"   # client
+cd "D:\Assingmant\assinment -10\staysphere-server"          # server
+```
 
-3. **Install Dependencies and Run:**
-   ```bash
-   npm install
-   npm run dev
-   ```
+### 1) Client env (`.env.local`)
+
+```env
+BETTER_AUTH_SECRET=<secret-key>
+BETTER_AUTH_URL=http://localhost:3000
+NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
+MONGO_DB=<mongodb-uri>
+GOOGLE_CLIENT_ID=<google-id>
+GOOGLE_CLIENT_SECRET=<google-secret>
+NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_IMGBB_API_KEY=<imgbb-key>
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=<stripe-pub-key>
+```
+
+### 2) Server env (see `staysphere-server/.env.example`)
+
+```env
+MONGO_DB=<mongodb-uri>
+STRIPE_SECRET_KEY=sk_test_...
+PORT=5000
+```
+
+### 3) Install & run
+
+```powershell
+# Server terminal
+cd "D:\Assingmant\assinment -10\staysphere-server"
+npm install
+npm run dev
+
+# Client terminal
+cd "D:\Assingmant\assinment -10\clinet\property_platfrom"
+npm install
+npm run dev
+```
+
+### Roles for graders
+
+- New accounts start as **Tenant**.
+- Promote **Owner** / **Admin** from Admin → Users (requires an existing admin in MongoDB).
+- Public property browsing works without login at `/properties`.
+

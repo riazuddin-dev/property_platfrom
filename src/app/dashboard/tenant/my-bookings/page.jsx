@@ -74,8 +74,12 @@ export default function MyBookingsPage() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">My Bookings</h1>
-        <p className="text-slate-400">View and manage your property bookings</p>
+        <h1 className="mb-2 text-3xl font-bold text-white md:text-4xl">
+          My Applications
+        </h1>
+        <p className="text-slate-400">
+          Track rental applications you submitted — status, phone, and dates
+        </p>
       </motion.div>
 
       {bookings.length === 0 ? (
@@ -87,8 +91,10 @@ export default function MyBookingsPage() {
           <div className="inline-flex p-6 bg-slate-800/50 rounded-full mb-6">
             <Home className="text-slate-500" size={48} />
           </div>
-          <h3 className="text-2xl font-bold text-white mb-3">No bookings yet</h3>
-          <p className="text-slate-400 mb-6">Start exploring properties and book your dream home</p>
+          <h3 className="mb-3 text-2xl font-bold text-white">No applications yet</h3>
+          <p className="mb-6 text-slate-400">
+            Browse properties and click Apply Now to submit a rental application
+          </p>
           <Link
             href="/properties"
             className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all"

@@ -85,14 +85,14 @@ export default function DashboardSidebar() {
     { title: "Dashboard", href: "/dashboard/owner", icon: LayoutDashboard },
     { title: "Add Property", href: "/dashboard/owner/add-property", icon: PlusCircle },
     { title: "My Properties", href: "/dashboard/owner/my-properties", icon: Building2 },
-    { title: "Booking Requests", href: "/dashboard/owner/booking-requests", icon: CalendarDays },
+    { title: "Applications", href: "/dashboard/owner/booking-requests", icon: CalendarDays },
     { title: "Analytics", href: "/dashboard/owner/analytics", icon: BarChart3 },
     { title: "Profile", href: "/dashboard/owner/profile", icon: User },
   ];
 
   const tenantMenus = [
     { title: "Dashboard", href: "/dashboard/tenant", icon: LayoutDashboard },
-    { title: "My Bookings", href: "/dashboard/tenant/my-bookings", icon: CalendarDays },
+    { title: "My Applications", href: "/dashboard/tenant/my-bookings", icon: CalendarDays },
     { title: "Favorites", href: "/dashboard/tenant/favorites", icon: Heart },
     { title: "Profile", href: "/dashboard/tenant/profile", icon: User },
   ];

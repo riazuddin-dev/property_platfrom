@@ -5,20 +5,17 @@ import Reviews from "@/sections/Reviews";
 import TopLocations from "@/sections/TopLocations";
 import TrustedBy from "@/sections/TrustedBy";
 import WhyChooseUs from "@/sections/WhyChoose";
-import Image from "next/image";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 w-full items-center justify-center bg-slate-950 font-sans">
-
-      <Hero></Hero>
-      <TrustedBy></TrustedBy>
-      <FeaturedProperties></FeaturedProperties>
-      <WhyChooseUs></WhyChooseUs>
-      <TopLocations></TopLocations>
-      <Reviews></Reviews>
-      <CTA></CTA>
-   
+    <div className="flex w-full flex-1 flex-col bg-white font-sans dark:bg-slate-950">
+      <Hero />
+      <TrustedBy />
+      <FeaturedProperties />
+      <WhyChooseUs />
+      <TopLocations />
+      <Reviews />
+      <CTA />
     </div>
   );
 }

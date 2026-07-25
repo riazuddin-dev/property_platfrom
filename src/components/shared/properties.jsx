@@ -63,6 +63,9 @@ export default function PropertiesPage() {
         setTotalProperties(result.total || 0);
       } catch (error) {
         console.error("Error loading properties:", error);
+        setProperties([]);
+        setTotalPages(1);
+        setTotalProperties(0);
       } finally {
         setLoading(false);
       }

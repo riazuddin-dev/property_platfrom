@@ -86,9 +86,9 @@ export default function Navbar() {
       animate={{ y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled
-          ? "bg-slate-950/80 backdrop-blur-2xl border-b border-white/10 shadow-2xl shadow-black/20"
-          : "bg-transparent"
+        scrolled || pathname !== "/"
+          ? "border-b border-slate-200/80 bg-white/90 shadow-lg shadow-slate-900/5 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/85 dark:shadow-black/20"
+          : "border-b border-transparent bg-transparent"
       }`}
     >
       <div className="max-w-7xl mx-auto px-6">
@@ -105,8 +105,17 @@ export default function Navbar() {
                 className="absolute inset-0 rounded-2xl bg-gradient-to-br from-teal-400 to-cyan-400 opacity-0 group-hover:opacity-100 blur-xl transition-opacity"
               />
             </motion.div>
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tighter text-white">
-              Stay<span className="bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">Sphere</span>
+            <h2
+              className={`text-2xl font-bold tracking-tighter md:text-3xl ${
+                scrolled || pathname !== "/"
+                  ? "text-slate-900 dark:text-white"
+                  : "text-white"
+              }`}
+            >
+              Stay
+              <span className="bg-gradient-to-r from-teal-500 to-cyan-500 bg-clip-text text-transparent">
+                Sphere
+              </span>
             </h2>
           </Link>
 
@@ -122,10 +131,12 @@ export default function Navbar() {
                 >
                   <motion.div
                     whileHover={{ scale: 1.05 }}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${
+                    className={`flex items-center gap-2 rounded-xl px-5 py-2.5 font-medium transition-all ${
                       isActive
-                        ? "bg-gradient-to-r from-teal-500/20 to-cyan-500/20 text-teal-400 border border-teal-500/30"
-                        : "text-slate-300 hover:text-white hover:bg-white/5"
+                        ? "border border-teal-500/30 bg-gradient-to-r from-teal-500/15 to-cyan-500/15 text-teal-600 dark:text-teal-400"
+                        : scrolled || pathname !== "/"
+                          ? "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white"
+                          : "text-slate-200 hover:bg-white/5 hover:text-white"
                     }`}
                   >
                     <link.icon size={16} className={isActive ? "text-teal-400" : ""} />
@@ -193,7 +204,13 @@ export default function Navbar() {
                       />
                       <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-950" />
                     </div>
-                    <span className="text-white font-medium max-w-[120px] truncate text-sm">
+                    <span
+                      className={`max-w-[120px] truncate text-sm font-medium ${
+                        scrolled || pathname !== "/"
+                          ? "text-slate-800 dark:text-white"
+                          : "text-white"
+                      }`}
+                    >
                       {session.user.name}
                     </span>
                     <motion.div

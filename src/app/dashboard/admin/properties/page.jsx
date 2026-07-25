@@ -3,7 +3,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-// পরিবর্তন করো:
 import { getAllPropertiesAdmin, updatePropertyStatus } from "@/services/propertyApi";
 import { authClient } from "@/lib/auth-client";
 import Swal from "sweetalert2";

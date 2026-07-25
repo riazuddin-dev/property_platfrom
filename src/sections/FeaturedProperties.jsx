@@ -3,9 +3,99 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { MapPin, BedDouble, Bath, Heart } from "lucide-react";
+import { MapPin, BedDouble, Bath, ArrowRight, Sparkles } from "lucide-react";
 import { getAllProperties } from "@/services/propertyApi";
 import { motion } from "framer-motion";
+
+function PropertySkeleton() {
+  return (
+    <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900/70">
+      <div className="h-56 animate-pulse bg-slate-200 dark:bg-slate-800" />
+      <div className="flex flex-1 flex-col gap-3 p-5">
+        <div className="h-5 w-3/4 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+        <div className="h-4 w-full animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+        <div className="h-4 w-2/3 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+        <div className="mt-auto h-11 w-full animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800" />
+      </div>
+    </div>
+  );
+}
+
+function PropertyCard({ property, index = 0 }) {
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ delay: (index % 4) * 0.06, duration: 0.45 }}
+      whileHover={{ y: -6 }}
+      className="group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg shadow-slate-200/50 transition dark:border-white/10 dark:bg-slate-900/70 dark:shadow-black/20"
+    >
+      <div className="relative h-56 overflow-hidden bg-slate-200 dark:bg-slate-800">
+        <img
+          src={
+            property.image ||
+            "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&h=600&fit=crop"
+          }
+          alt={property.title}
+          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
+        <span className="absolute left-4 top-4 rounded-full bg-teal-600 px-3 py-1 text-xs font-bold text-white shadow-lg">
+          {property.propertyType || "Property"}
+        </span>
+        {property.location && (
+          <span className="absolute bottom-4 left-4 inline-flex items-center gap-1 rounded-full bg-black/40 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
+            <MapPin size={12} />
+            <span className="line-clamp-1 max-w-[10rem]">{property.location}</span>
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-1 flex-col p-5">
+        <h3 className="line-clamp-1 text-lg font-bold text-slate-900 dark:text-white">
+          {property.title}
+        </h3>
+        <p className="mt-2 line-clamp-2 min-h-[2.75rem] text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+          {property.description ||
+            property.shortDescription ||
+            `Premium ${property.propertyType || "home"} available for rent in ${
+              property.location || "a prime area"
+            }.`}
+        </p>
+
+        <div className="mt-4 flex flex-wrap items-center gap-3 text-xs font-medium text-slate-500 dark:text-slate-400">
+          {property.bedrooms != null && (
+            <span className="inline-flex items-center gap-1">
+              <BedDouble size={14} className="text-teal-500" />
+              {property.bedrooms} bed
+            </span>
+          )}
+          {property.bathrooms != null && (
+            <span className="inline-flex items-center gap-1">
+              <Bath size={14} className="text-cyan-500" />
+              {property.bathrooms} bath
+            </span>
+          )}
+          <span className="ml-auto text-base font-bold text-teal-600 dark:text-teal-400">
+            ৳{Number(property.rent || 0).toLocaleString()}
+            <span className="text-xs font-medium text-slate-400">/mo</span>
+          </span>
+        </div>
+
+        <div className="mt-auto pt-4">
+          <Link
+            href={`/properties/${property._id}`}
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-slate-900 text-sm font-semibold text-white transition hover:bg-teal-600 dark:border-white/10 dark:bg-white/10 dark:hover:bg-teal-600"
+          >
+            View Details
+            <ArrowRight size={16} />
+          </Link>
+        </div>
+      </div>
+    </motion.article>
+  );
+}
 
 export default function FeaturedProperties() {
   const [properties, setProperties] = useState([]);
@@ -13,61 +103,73 @@ export default function FeaturedProperties() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await getAllProperties(1, 6);
-      setProperties(data.properties || []);
-      setLoading(false);
+      try {
+        const data = await getAllProperties(1, 8);
+        setProperties(data.properties || []);
+      } catch {
+        setProperties([]);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchData();
   }, []);
 
-  if (loading) return <div className="py-20 text-center">Loading...</div>;
-
   return (
-    <section className="py-24 bg-slate-50 dark:bg-slate-950">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-5xl font-bold">Featured Properties</h2>
-          <p className="text-slate-600 dark:text-slate-400 mt-3">Handpicked premium homes for you</p>
+    <section className="bg-slate-50 py-20 dark:bg-slate-950 sm:py-24">
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="mb-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-teal-500/20 bg-teal-500/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400">
+              <Sparkles size={14} />
+              Featured
+            </div>
+            <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl md:text-5xl">
+              Handpicked homes for you
+            </h2>
+            <p className="mt-3 max-w-xl text-slate-600 dark:text-slate-400">
+              Consistent cards, clear pricing, and one-click details — explore
+              premium rentals ready for your next move.
+            </p>
+          </div>
+          <Link
+            href="/properties"
+            className="inline-flex items-center gap-2 self-start rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:border-teal-500/40 hover:text-teal-700 dark:border-white/10 dark:bg-slate-900 dark:text-white dark:hover:text-teal-300"
+          >
+            View all properties
+            <ArrowRight size={16} />
+          </Link>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {properties.slice(0, 6).map((property, index) => (
-            <motion.div
-              key={property._id}
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="group bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all"
+        {loading ? (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <PropertySkeleton key={i} />
+            ))}
+          </div>
+        ) : properties.length === 0 ? (
+          <div className="rounded-3xl border border-dashed border-slate-300 px-6 py-16 text-center dark:border-white/15">
+            <p className="text-slate-500 dark:text-slate-400">
+              No featured properties available right now.
+            </p>
+            <Link
+              href="/properties"
+              className="mt-4 inline-block font-semibold text-teal-600 dark:text-teal-400"
             >
-              <div className="relative h-72">
-                <img src={property.image} alt={property.title} className="w-full h-full object-cover group-hover:scale-110 transition" />
-                <div className="absolute top-4 right-4 bg-teal-600 text-white px-4 py-1 rounded-full text-sm">
-                  {property.propertyType}
-                </div>
-              </div>
-
-              <div className="p-7">
-                <h3 className="text-2xl font-semibold line-clamp-2">{property.title}</h3>
-                <p className="flex items-center gap-2 text-slate-500 mt-2">
-                  <MapPin size={18} /> {property.location}
-                </p>
-
-                <div className="flex justify-between items-end mt-6">
-                  <div>
-                    <p className="text-3xl font-bold text-teal-600">৳{property.rent}</p>
-                    <p className="text-sm text-slate-500">/month</p>
-                  </div>
-                  <Link 
-                    href={`/properties/${property._id}`}
-                    className="px-6 py-3 bg-slate-900 text-white rounded-2xl hover:bg-black transition"
-                  >
-                    View Details
-                  </Link>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              Browse all listings
+            </Link>
+          </div>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {properties.slice(0, 8).map((property, index) => (
+              <PropertyCard
+                key={property._id}
+                property={property}
+                index={index}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

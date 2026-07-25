@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import { 
   Heart, MapPin, BedDouble, Bath, Maximize, Calendar, 
   Phone, Mail, Share2, Star, Send, X, Home, Shield,
@@ -10,10 +11,12 @@ import {
 } from "lucide-react";
 import { getPropertyById } from "@/services/propertyApi";
 import { authClient } from "@/lib/auth-client";
+import toast from "react-hot-toast";
 import Swal from "sweetalert2";
 import BookingModal from "@/components/shared/booking/BookingModel";
 import ReviewSection from "@/components/shared/review/ReviewSection";
 import { fetchWithAuth } from "@/utils/api";
+import { getUserRole } from "@/services/userApi";
 
 export default function PropertyDetailsPage() {
   const params = useParams();
@@ -25,6 +28,8 @@ export default function PropertyDetailsPage() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
+  const [userRole, setUserRole] = useState(null);
+  const [applied, setApplied] = useState(false);
 
   useEffect(() => {
     const loadProperty = async () => {
@@ -55,13 +60,25 @@ export default function PropertyDetailsPage() {
     if (params.id) loadProperty();
   }, [params.id, session]);
 
+  useEffect(() => {
+    const loadRole = async () => {
+      if (!session?.user?.email) {
+        setUserRole(null);
+        return;
+      }
+      try {
+        const data = await getUserRole(session.user.email);
+        setUserRole((data?.role || "tenant").toLowerCase());
+      } catch {
+        setUserRole("tenant");
+      }
+    };
+    loadRole();
+  }, [session?.user?.email]);
+
   const handleFavoriteToggle = async () => {
     if (!session?.user) {
-      Swal.fire({
-        icon: "warning",
-        title: "Login Required",
-        text: "Please login to save favorites"
-      });
+      toast.error("Please login to save favorites");
       router.push("/login");
       return;
     }
@@ -80,12 +97,7 @@ export default function PropertyDetailsPage() {
         }
         
         setIsFavorite(false);
-        Swal.fire({
-          icon: "success",
-          title: "Removed!",
-          timer: 1500,
-          showConfirmButton: false
-        });
+        toast.success("Removed from favorites");
       } else {
         // Add to favorites
         await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/favorites`, {
@@ -102,20 +114,11 @@ export default function PropertyDetailsPage() {
         });
         
         setIsFavorite(true);
-        Swal.fire({
-          icon: "success",
-          title: "Added to Favorites!",
-          timer: 1500,
-          showConfirmButton: false
-        });
+        toast.success("Added to favorites");
       }
     } catch (error) {
       console.error("Favorite error:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Failed to update favorites"
-      });
+      toast.error("Failed to update favorites");
     }
   };
 
@@ -144,42 +147,31 @@ export default function PropertyDetailsPage() {
   };
 
   const handleBookNow = () => {
-  // Login check
-  if (!session?.user) {
-    Swal.fire({
-      icon: "warning",
-      title: "Login Required",
-      text: "Please login to book this property"
-    });
-    router.push("/login");
-    return;
-  }
+    if (!session?.user) {
+      toast.error("Please login to apply for this property");
+      router.push(`/login?redirect=/properties/${params.id}`);
+      return;
+    }
 
-  // ✅ শুধু tenant না হলে block করবে
-  const userRole = session.user.role?.toLowerCase();
-  
-  if (userRole && userRole !== "tenant") {
-    Swal.fire({
-      icon: "error",
-      title: "Access Denied",
-      text: `Your role is "${session.user.role}". Only tenants can book properties.`
-    });
-    return;
-  }
+    const role = (userRole || session.user.role || "tenant").toLowerCase();
 
-  // Cannot book own property
-  if (session.user.email === property.ownerEmail) {
-    Swal.fire({
-      icon: "error",
-      title: "Cannot Book",
-      text: "You cannot book your own property"
-    });
-    return;
-  }
+    if (role === "owner" || role === "admin") {
+      toast.error("Only tenants can apply for rental properties");
+      return;
+    }
 
-  // ✅ সব ঠিক থাকলে modal খুলবে
-  setShowBookingModal(true);
-};
+    if (session.user.email === property.ownerEmail) {
+      toast.error("You cannot apply to your own property");
+      return;
+    }
+
+    if (applied) {
+      toast("You already applied for this property");
+      return;
+    }
+
+    setShowBookingModal(true);
+  };
 
   if (loading) {
     return (
@@ -449,11 +441,20 @@ export default function PropertyDetailsPage() {
 
               <button
                 onClick={handleBookNow}
-                className="w-full py-4 bg-white text-teal-600 rounded-2xl font-bold text-lg hover:bg-teal-50 transition-all shadow-lg mb-3 flex items-center justify-center gap-2"
+                disabled={applied}
+                className="mb-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-4 text-lg font-bold text-teal-600 shadow-lg transition-all hover:bg-teal-50 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                <Calendar size={20} />
-                Book Now
+                <Send size={20} />
+                {applied ? "Application submitted" : "Apply Now"}
               </button>
+              {session?.user?.email === property.ownerEmail && (
+                <Link
+                  href="/dashboard/owner/booking-requests"
+                  className="mb-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-white/30 bg-white/10 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
+                >
+                  View applications
+                </Link>
+              )}
 
               <button
                 onClick={handleFavoriteToggle}
@@ -524,12 +525,13 @@ export default function PropertyDetailsPage() {
         </div>
       </div>
 
-      {/* Booking Modal */}
+      {/* Apply Modal */}
       <AnimatePresence>
         {showBookingModal && (
           <BookingModal
             property={property}
             onClose={() => setShowBookingModal(false)}
+            onSuccess={() => setApplied(true)}
           />
         )}
       </AnimatePresence>
