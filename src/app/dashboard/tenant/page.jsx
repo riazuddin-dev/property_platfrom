@@ -14,29 +14,44 @@ export default function TenantDashboard() {
   const [stats, setStats] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchData = async () => {
+      setLoading(true);
+      setError("");
       try {
         const [statsData, bookingsData] = await Promise.all([
           getDashboardStats(),
           getMyBookings(),
         ]);
+        if (cancelled) return;
         setStats(statsData);
         if (Array.isArray(bookingsData)) {
           setBookings(bookingsData.slice(0, 3)); // Show only 3 recent
         } else {
           setBookings([]);
         }
-      } catch (error) {
-        console.error("Error fetching data:", error);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        if (!cancelled) {
+          setError("Could not load your dashboard. Check your connection and try again.");
+          setStats(null);
+          setBookings([]);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadKey]);
 
   const statCards = [
     {
@@ -90,9 +105,22 @@ export default function TenantDashboard() {
           Welcome back, <span className="text-teal-500">{session?.user?.name || "Tenant"}</span> 👋
         </h1>
         <p className="text-slate-500 dark:text-slate-400 mt-2">
-          Here's an overview of your rental activities
+          Here&apos;s an overview of your rental activities
         </p>
       </motion.div>
+
+      {error && (
+        <div className="mb-8 flex flex-col gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-rose-300">{error}</p>
+          <button
+            type="button"
+            onClick={() => setReloadKey((k) => k + 1)}
+            className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-teal-500/40 hover:bg-teal-500/10"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
