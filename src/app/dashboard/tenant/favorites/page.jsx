@@ -13,34 +13,44 @@ export default function FavoritesPage() {
   const { data: session } = authClient.useSession();
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    if (session?.user) {
-      loadFavorites();
-    }
-  }, [session]);
+    if (!session?.user) return;
 
-  const loadFavorites = async () => {
-    try {
-      const data = await getFavorites();
-      console.log("Favorites API Response:", data); // Debug log
-      
-      // ✅ Ensure data is an array
-      if (Array.isArray(data)) {
-        setFavorites(data);
-      } else if (data && Array.isArray(data.favorites)) {
-        // If API returns { favorites: [...] }
-        setFavorites(data.favorites);
-      } else {
-        setFavorites([]);
+    let cancelled = false;
+
+    const loadFavorites = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const data = await getFavorites();
+        if (cancelled) return;
+
+        if (Array.isArray(data)) {
+          setFavorites(data);
+        } else if (data && Array.isArray(data.favorites)) {
+          setFavorites(data.favorites);
+        } else {
+          setFavorites([]);
+        }
+      } catch (err) {
+        console.error("Error loading favorites:", err);
+        if (!cancelled) {
+          setError("Could not load favorites. Check your connection and try again.");
+          setFavorites([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    } catch (error) {
-      console.error("Error loading favorites:", error);
-      setFavorites([]); // Set empty array on error
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    loadFavorites();
+    return () => {
+      cancelled = true;
+    };
+  }, [session, reloadKey]);
 
   const handleRemoveFavorite = async (id) => {
     const result = await Swal.fire({
@@ -106,8 +116,21 @@ export default function FavoritesPage() {
           </p>
         </motion.div>
 
+        {error && (
+          <div className="mb-8 flex flex-col gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-rose-600 dark:text-rose-300">{error}</p>
+            <button
+              type="button"
+              onClick={() => setReloadKey((k) => k + 1)}
+              className="shrink-0 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-4 py-2 text-sm font-semibold text-slate-900 dark:text-white transition hover:border-teal-500/40 hover:bg-teal-500/10"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         {/* Favorites Grid */}
-        {favorites.length === 0 ? (
+        {!error && favorites.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
