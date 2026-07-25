@@ -9,26 +9,45 @@ import { fetchWithAuth } from "@/utils/api";
 export default function MyBookingsPage() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
+
     const loadBookings = async () => {
+      setLoading(true);
+      setError("");
       try {
-        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/my-bookings`);
+        const res = await fetchWithAuth(
+          `${process.env.NEXT_PUBLIC_API_URL}/my-bookings`
+        );
+        if (!res.ok) {
+          throw new Error("Failed to load bookings");
+        }
         const data = await res.json();
+        if (cancelled) return;
         if (Array.isArray(data)) {
           setBookings(data);
         } else {
           setBookings([]);
         }
-      } catch (error) {
-        console.error("Error loading bookings:", error);
+      } catch (err) {
+        console.error("Error loading bookings:", err);
+        if (!cancelled) {
+          setError("Could not load your applications. Check your connection and try again.");
+          setBookings([]);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     loadBookings();
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadKey]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -82,7 +101,20 @@ export default function MyBookingsPage() {
         </p>
       </motion.div>
 
-      {bookings.length === 0 ? (
+      {error && (
+        <div className="mb-8 flex flex-col gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-rose-300">{error}</p>
+          <button
+            type="button"
+            onClick={() => setReloadKey((k) => k + 1)}
+            className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-teal-500/40 hover:bg-teal-500/10"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {!error && bookings.length === 0 ? (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
